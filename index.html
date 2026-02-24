@@ -1,0 +1,1517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SamCart — Navigation Prototype</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', -apple-system, sans-serif; }
+    button { font-family: inherit; }
+    input { font-family: inherit; }
+    ::-webkit-scrollbar { height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+  </style>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState } = React;
+
+// ════════════════════════════════════════════
+// SAMCART — Section Landing Pages Mockup
+// ════════════════════════════════════════════
+
+const App = () => {
+  const [currentPage, setCurrentPage] = useState("home");
+  const [expandedProduct, setExpandedProduct] = useState("playbook");
+  const [productView, setProductView] = useState("performance");
+  const [growthTab, setGrowthTab] = useState("overview");
+  const [salesTab, setSalesTab] = useState("overview");
+  const [pagesTab, setPagesTab] = useState("overview");
+
+  // ─── Colors ───
+  const c = {
+    bg: "#F5F6F8", card: "#FFFFFF", text: "#171A1F", sub: "#5F6B7A", muted: "#9BA4B0",
+    border: "#E2E5EA", blue: "#2563EB", blueLight: "#EEF4FF", blueBorder: "#BDD4FE",
+    green: "#0D9668", greenLight: "#EDFCF5", greenBorder: "#A3F0CD",
+    amber: "#CF8A06", amberLight: "#FFF9E6", amberBorder: "#F5D880",
+    purple: "#7534ED", purpleLight: "#F3EFFE", purpleBorder: "#CFBCFE",
+    rose: "#DC2452", roseLight: "#FFF0F3", roseBorder: "#FDBED0",
+    slate: "#374151",
+  };
+
+  // ─── Shared Components ───
+  const Pill = ({ bg, color, border, children, dot }) => (
+    <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 9px", borderRadius: 100, fontSize: 10, fontWeight: 700, background: bg, color, border: `1px solid ${border}`, letterSpacing: "0.02em", whiteSpace: "nowrap", lineHeight: "18px" }}>
+      {dot && <span style={{ width: 5, height: 5, borderRadius: "50%", background: color, marginRight: 5 }} />}{children}
+    </span>
+  );
+
+  const Btn = ({ children, color = c.blue, bg = c.blueLight, border = c.blueBorder, strong, small, onClick }) => (
+    <button onClick={onClick} style={{
+      background: strong ? color : bg, color: strong ? "#fff" : color,
+      border: strong ? "none" : `1px solid ${border}`, borderRadius: strong ? 8 : 6,
+      padding: strong ? "8px 16px" : small ? "3px 8px" : "4px 11px",
+      fontSize: small ? 10 : strong ? 13 : 11, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
+    }}>{children}</button>
+  );
+
+  const Card = ({ children, style: s }) => (
+    <div style={{ background: c.card, borderRadius: 12, border: `1px solid ${c.border}`, ...s }}>{children}</div>
+  );
+
+  const SLabel = ({ children }) => (
+    <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: c.muted, marginBottom: 6 }}>{children}</div>
+  );
+
+  const Metric = ({ label, value, sub: s, change, color, large }) => (
+    <div>
+      <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: c.muted, marginBottom: 2 }}>{label}</div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
+        <span style={{ fontSize: large ? 28 : 20, fontWeight: 700, color: color || c.text }}>{value}</span>
+        {change && <span style={{ fontSize: 11, fontWeight: 600, color: change.startsWith("+") ? c.green : change.startsWith("-") ? c.rose : c.muted }}>{change}</span>}
+      </div>
+      {s && <div style={{ fontSize: 11, color: c.muted, marginTop: 1 }}>{s}</div>}
+    </div>
+  );
+
+  const TabBar = ({ tabs, active, onChange }) => (
+    <div style={{ display: "flex", gap: 2, background: c.bg, borderRadius: 8, padding: 3, marginBottom: 16, width: "fit-content" }}>
+      {tabs.map(t => (
+        <button key={t.key} onClick={() => onChange(t.key)} style={{
+          padding: "6px 14px", borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: "pointer",
+          background: active === t.key ? c.card : "transparent", color: active === t.key ? c.text : c.sub,
+          border: active === t.key ? `1px solid ${c.border}` : "1px solid transparent",
+          boxShadow: active === t.key ? "0 1px 2px rgba(0,0,0,0.04)" : "none",
+        }}>{t.label}</button>
+      ))}
+    </div>
+  );
+
+  const ProgressBar = ({ value, max, color = c.blue }) => (
+    <div style={{ height: 6, background: c.bg, borderRadius: 3, overflow: "hidden", flex: 1 }}>
+      <div style={{ height: "100%", width: `${Math.min(100, (value / max) * 100)}%`, background: color, borderRadius: 3, transition: "width 0.3s" }} />
+    </div>
+  );
+
+  const MiniSparkline = ({ data, color = c.blue, width = 80, height = 24 }) => {
+    const max = Math.max(...data);
+    const min = Math.min(...data);
+    const range = max - min || 1;
+    const points = data.map((v, i) => `${(i / (data.length - 1)) * width},${height - ((v - min) / range) * height}`).join(" ");
+    return (
+      <svg width={width} height={height} style={{ display: "block" }}>
+        <polyline points={points} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" />
+      </svg>
+    );
+  };
+
+  const [activeBiz, setActiveBiz] = useState(0);
+
+  const businesses = [
+    { name: "Creator Academy", icon: "C", color: c.purple },
+    { name: "Fitness Empire", icon: "F", color: "#0D9668" },
+    { name: "SaaS Toolkit", icon: "S", color: c.blue },
+  ];
+
+  // ─── Nav ───
+  const navItems = [
+    { key: "home", label: "Home" },
+    { key: "products", label: "Products" },
+    { key: "pages", label: "Pages" },
+    { key: "growth", label: "Growth" },
+    { key: "sales", label: "Sales" },
+    { key: "apps", label: "Apps" },
+  ];
+
+  const Nav = () => (
+    <div style={{ position: "sticky", top: 0, zIndex: 10, background: "#fff" }}>
+      {/* Business tabs row */}
+      <div style={{ padding: "0 28px", display: "flex", alignItems: "end", height: 40, gap: 0, borderBottom: `1px solid ${c.border}` }}>
+        {businesses.map((b, i) => (
+          <div key={i} onClick={() => setActiveBiz(i)} style={{
+            display: "flex", alignItems: "center", gap: 6, padding: "7px 16px",
+            borderRadius: "8px 8px 0 0", cursor: "pointer", marginBottom: -1,
+            background: i === activeBiz ? c.card : "transparent",
+            border: i === activeBiz ? `1px solid ${c.border}` : "1px solid transparent",
+            borderBottom: i === activeBiz ? `1px solid ${c.card}` : "1px solid transparent",
+            transition: "all 0.15s",
+          }}
+          onMouseEnter={e => { if (i !== activeBiz) e.currentTarget.style.background = c.bg; }}
+          onMouseLeave={e => { if (i !== activeBiz) e.currentTarget.style.background = "transparent"; }}>
+            <div style={{ width: 18, height: 18, borderRadius: 4, background: b.color, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 9, fontWeight: 800, flexShrink: 0 }}>{b.icon}</div>
+            <span style={{ fontSize: 12, fontWeight: i === activeBiz ? 700 : 500, color: i === activeBiz ? c.text : c.sub, whiteSpace: "nowrap" }}>{b.name}</span>
+          </div>
+        ))}
+        {/* + New Business tab */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 4, padding: "7px 12px",
+          borderRadius: "8px 8px 0 0", cursor: "pointer", marginBottom: -1,
+          border: "1px solid transparent",
+        }}
+        onMouseEnter={e => e.currentTarget.style.background = c.purpleLight}
+        onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+          <span style={{ fontSize: 14, fontWeight: 700, color: c.purple, lineHeight: 1 }}>+</span>
+          <span style={{ fontSize: 11, fontWeight: 600, color: c.purple }}>New</span>
+        </div>
+
+        {/* User avatar far right */}
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", paddingBottom: 6 }}>
+          <div style={{ width: 26, height: 26, borderRadius: "50%", background: c.blueLight, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, color: c.blue }}>JD</div>
+        </div>
+      </div>
+
+      {/* Section navigation row */}
+      <div style={{ padding: "0 28px", display: "flex", alignItems: "center", height: 38, gap: 18, borderBottom: `1px solid ${c.border}` }}>
+        {navItems.map(n => (
+          <div key={n.key} onClick={() => setCurrentPage(n.key)} style={{
+            fontSize: 12, fontWeight: currentPage === n.key ? 700 : 500,
+            color: currentPage === n.key ? c.blue : c.sub, cursor: "pointer",
+            padding: "9px 0", borderBottom: currentPage === n.key ? `2px solid ${c.blue}` : "2px solid transparent",
+            marginBottom: -1,
+          }}>{n.label}</div>
+        ))}
+      </div>
+    </div>
+  );
+
+  // ════════════════════════════════════════════
+  //  HOME DASHBOARD
+  // ════════════════════════════════════════════
+  const HomePage = () => {
+    const AI = () => <span style={{ fontSize: 11, marginRight: 2 }}>✦</span>;
+    const AiBtn = ({ children, color = c.blue, bg = c.blueLight, border = c.blueBorder, small, strong }) => (
+      <button style={{
+        background: strong ? `linear-gradient(135deg, ${color}, ${color}dd)` : bg,
+        color: strong ? "#fff" : color,
+        border: strong ? "none" : `1px solid ${border}`, borderRadius: strong ? 8 : 6,
+        padding: strong ? "8px 16px" : small ? "3px 8px" : "4px 11px",
+        fontSize: small ? 10 : strong ? 13 : 11, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
+        display: "inline-flex", alignItems: "center", gap: 3,
+      }}><AI />{children}</button>
+    );
+
+    return (
+      <div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <div>
+            <h1 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 2px", letterSpacing: "-0.02em" }}>Your Business</h1>
+            <p style={{ margin: 0, color: c.sub, fontSize: 13 }}>Last 30 days · 6 live products</p>
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            <AiBtn strong color={c.purple}>Generate Product</AiBtn>
+            <AiBtn>What Should I Do Next?</AiBtn>
+          </div>
+        </div>
+
+        {/* Quick Actions - right at top */}
+        <Card style={{ padding: "10px 18px", marginBottom: 16, background: `linear-gradient(135deg, ${c.purpleLight}88, ${c.blueLight}88)`, border: `1px solid ${c.purpleBorder}` }}>
+          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+            <span style={{ fontSize: 11, fontWeight: 700, color: c.purple, marginRight: 4 }}>✦ Quick Actions</span>
+            <AiBtn small color={c.purple} bg="rgba(255,255,255,0.7)" border={c.purpleBorder}>Generate a Product</AiBtn>
+            <AiBtn small color={c.purple} bg="rgba(255,255,255,0.7)" border={c.purpleBorder}>Generate a Page</AiBtn>
+            <AiBtn small color={c.purple} bg="rgba(255,255,255,0.7)" border={c.purpleBorder}>Generate Email Campaign</AiBtn>
+            <AiBtn small color={c.purple} bg="rgba(255,255,255,0.7)" border={c.purpleBorder}>Generate Social Posts</AiBtn>
+            <AiBtn small color={c.purple} bg="rgba(255,255,255,0.7)" border={c.purpleBorder}>Run an Experiment</AiBtn>
+            <AiBtn small color={c.purple} bg="rgba(255,255,255,0.7)" border={c.purpleBorder}>Analyze My Business</AiBtn>
+          </div>
+        </Card>
+
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
+          {[
+            { l: "Revenue", v: "$5,367", ch: "+23%", sp: [12, 18, 15, 22, 28, 31, 27] },
+            { l: "Orders", v: "133", ch: "+12%", sp: [5, 8, 6, 9, 12, 14, 11] },
+            { l: "Leads", v: "290", ch: "+31%", sp: [15, 22, 18, 28, 35, 42, 38] },
+            { l: "Avg Order Value", v: "$40.35", ch: "+8%", sp: [35, 37, 36, 39, 41, 42, 40] },
+          ].map((s, i) => (
+            <Card key={i} style={{ padding: "16px 18px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
+                <Metric label={s.l} value={s.v} change={s.ch} />
+                <MiniSparkline data={s.sp} color={c.green} />
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* Attention alerts */}
+        <Card style={{ padding: "14px 18px", marginBottom: 10, borderLeft: `3px solid ${c.purple}` }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 16 }}>🧪</span>
+              <span style={{ fontSize: 13 }}><strong>$39 vs $49 experiment</strong> on Creator Playbook is at 78% confidence · 4 days left</span>
+            </div>
+            <div style={{ display: "flex", gap: 6 }}>
+              <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Analyze Results</AiBtn>
+              <Btn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>View Experiment</Btn>
+            </div>
+          </div>
+        </Card>
+        <Card style={{ padding: "14px 18px", marginBottom: 16, borderLeft: `3px solid ${c.green}` }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 16 }}>📈</span>
+              <span style={{ fontSize: 13 }}><strong>Social media is driving 2× more leads</strong> than email for your free content this week.</span>
+            </div>
+            <AiBtn small>Generate More Social Posts</AiBtn>
+          </div>
+        </Card>
+
+        <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.05em", color: c.sub, marginBottom: 8 }}>Your Products</div>
+
+        {/* Product grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+          {[
+            { name: "Creator Playbook", price: "$39", rev: "$2,847", sales: 73, type: "Ebook", conv: "13.5%", trend: [18, 22, 19, 28, 31, 27, 33], hasUpsell: true, hasBump: true, exp: 1 },
+            { name: "Creator Masterclass", price: "$79", rev: "$1,580", sales: 20, type: "Ebook", conv: "7.0%", trend: [8, 6, 9, 5, 7, 8, 6], hasUpsell: false, hasBump: false, exp: 0, warn: true },
+            { name: "Social Media Templates", price: "$29", rev: "$522", sales: 18, type: "Download", conv: "11.5%", trend: [4, 6, 5, 8, 7, 9, 8], hasUpsell: false, hasBump: false, exp: 0 },
+            { name: "Creator Starter Kit", price: "$19", rev: "$418", sales: 22, type: "Download", conv: "11.1%", trend: [6, 5, 7, 8, 6, 9, 8], hasUpsell: false, hasBump: false, exp: 0 },
+            { name: "Free Creator Guide", price: "Free", rev: "203 leads", sales: null, type: "Lead Magnet", conv: "24.0%", trend: [18, 25, 22, 30, 35, 42, 38], free: true },
+            { name: "Launch Checklist", price: "Free", rev: "87 leads", sales: null, type: "Lead Magnet", conv: "27.9%", trend: [8, 12, 10, 14, 16, 18, 15], free: true, noConnect: true },
+          ].map((p, i) => (
+            <Card key={i} style={{ padding: "14px 16px", cursor: "pointer", transition: "border-color 0.15s" }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = c.blueBorder}
+              onMouseLeave={e => e.currentTarget.style.borderColor = c.border}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 8 }}>
+                <div>
+                  <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 3 }}>{p.name}</div>
+                  <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                    <Pill bg={c.blueLight} color={c.blue} border={c.blueBorder}>{p.type}</Pill>
+                    <Pill bg={c.greenLight} color={c.green} border={c.greenBorder} dot>Live</Pill>
+                    {p.hasUpsell && <Pill bg={c.greenLight} color={c.green} border={c.greenBorder}>Upsell ✓</Pill>}
+                    {p.exp > 0 && <Pill bg={c.purpleLight} color={c.purple} border={c.purpleBorder}>Testing</Pill>}
+                  </div>
+                </div>
+                <MiniSparkline data={p.trend} color={p.warn ? c.amber : c.green} />
+              </div>
+              <div style={{ display: "flex", gap: 20, alignItems: "end" }}>
+                <div>
+                  <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: c.muted }}>Revenue</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: p.free ? c.blue : c.text }}>{p.rev}</div>
+                </div>
+                {p.sales !== null && <div>
+                  <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: c.muted }}>Sales</div>
+                  <div style={{ fontSize: 18, fontWeight: 700 }}>{p.sales}</div>
+                </div>}
+                <div>
+                  <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: c.muted }}>Conv</div>
+                  <div style={{ fontSize: 18, fontWeight: 700, color: p.warn ? c.amber : c.text }}>{p.conv}{p.warn && " ⚠️"}</div>
+                </div>
+                <div style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
+                  {p.warn && <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>AI Redesign Page</AiBtn>}
+                  {!p.hasUpsell && !p.free && <AiBtn small>Generate Upsell</AiBtn>}
+                  {p.noConnect && <AiBtn small color={c.amber} bg={c.amberLight} border={c.amberBorder}>Connect to Product</AiBtn>}
+                  {!p.warn && !p.free && p.hasUpsell && <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Optimize</AiBtn>}
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+
+        {/* AI opportunity cards */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
+          <Card style={{ padding: "14px 18px", borderLeft: `3px solid ${c.purple}` }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700 }}>✦ 3 of 4 paid products have no upsell</div>
+                <div style={{ fontSize: 11, color: c.sub }}>AI can generate upsell ideas based on each product. Avg +40% revenue.</div>
+              </div>
+              <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Generate Upsells</AiBtn>
+            </div>
+          </Card>
+          <Card style={{ padding: "14px 18px", borderLeft: `3px solid ${c.blue}` }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+              <div>
+                <div style={{ fontSize: 12, fontWeight: 700 }}>✦ Your Checklist captures leads but doesn't sell</div>
+                <div style={{ fontSize: 11, color: c.sub }}>87 leads aren't connected to a paid product. AI can build the funnel.</div>
+              </div>
+              <AiBtn small>Build Funnel</AiBtn>
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  };
+
+  // ════════════════════════════════════════════
+  //  PRODUCTS PAGE
+  // ════════════════════════════════════════════
+  const ProductsPage = () => {
+    const AI = () => <span style={{ fontSize: 11, marginRight: 2 }}>✦</span>;
+    const AiBtn = ({ children, color = c.blue, bg = c.blueLight, border = c.blueBorder, small, strong }) => (
+      <button style={{
+        background: strong ? `linear-gradient(135deg, ${color}, ${color}dd)` : bg,
+        color: strong ? "#fff" : color,
+        border: strong ? "none" : `1px solid ${border}`, borderRadius: strong ? 8 : 6,
+        padding: strong ? "8px 16px" : small ? "3px 8px" : "4px 11px",
+        fontSize: small ? 10 : strong ? 13 : 11, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
+        display: "inline-flex", alignItems: "center", gap: 3,
+      }}><AI />{children}</button>
+    );
+
+    const gridCols = "1fr 90px 60px 120px 70px 130px";
+    const TableHeader = () => (
+      <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: 8, alignItems: "center", padding: "0 0 6px", borderBottom: `2px solid ${c.border}`, marginBottom: 2 }}>
+        {["Product", "Type", "Price", "Connected", "Status", ""].map((h, i) => (
+          <div key={i} style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: c.muted }}>{h}</div>
+        ))}
+      </div>
+    );
+    const ProductRow = ({ p }) => (
+      <div style={{ display: "grid", gridTemplateColumns: gridCols, gap: 8, alignItems: "center", padding: "9px 0", borderBottom: `1px solid ${c.border}`, cursor: "pointer" }}
+        onMouseEnter={e => e.currentTarget.style.background = c.bg}
+        onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+        <div style={{ fontSize: 12, fontWeight: 600, color: c.text, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</div>
+        <div><Pill bg={c.blueLight} color={c.blue} border={c.blueBorder}>{p.type}</Pill></div>
+        <div style={{ fontSize: 12, fontWeight: 600, color: c.text }}>{p.price}</div>
+        <div style={{ fontSize: 10, color: c.muted }}>{p.pages} {p.pages === 1 ? "page" : "pages"} · {p.deals} {p.deals === 1 ? "deal" : "deals"}</div>
+        <div>
+          {p.status === "live" && <Pill bg={c.greenLight} color={c.green} border={c.greenBorder} dot>Live</Pill>}
+          {p.status === "draft" && <Pill bg={c.amberLight} color={c.amber} border={c.amberBorder}>Draft</Pill>}
+          {p.status === "archived" && <Pill bg={c.bg} color={c.muted} border={c.border}>Archived</Pill>}
+        </div>
+        <div style={{ display: "flex", gap: 4 }}>
+          {p.status === "draft" && <AiBtn small color={c.amber} bg={c.amberLight} border={c.amberBorder}>Finish with AI</AiBtn>}
+          {!p.upsell && p.price !== "Free" && p.status === "live" && <AiBtn small>Generate Upsell</AiBtn>}
+          {p.upsell && <Pill bg={c.greenLight} color={c.green} border={c.greenBorder}>Upsell ✓</Pill>}
+          {p.status === "archived" && <Btn small>Restore</Btn>}
+        </div>
+      </div>
+    );
+
+    const paidLive = [
+      { name: "The Complete Creator Playbook", type: "Ebook", price: "$39", status: "live", pages: 2, deals: 2, upsell: true },
+      { name: "Creator Masterclass", type: "Ebook", price: "$79", status: "live", pages: 2, deals: 1, upsell: false },
+      { name: "Social Media Templates", type: "Download", price: "$29", status: "live", pages: 1, deals: 0, upsell: false },
+      { name: "Creator Starter Kit", type: "Download", price: "$19", status: "live", pages: 1, deals: 0, upsell: false },
+    ];
+    const leadMagnets = [
+      { name: "Free Creator Guide", type: "Lead Magnet", price: "Free", status: "live", pages: 1, deals: 0, upsell: false },
+      { name: "Launch Checklist", type: "Lead Magnet", price: "Free", status: "live", pages: 1, deals: 0, upsell: false },
+    ];
+    const drafts = [
+      { name: "Creator Workshop Recording", type: "Download", price: "$49", status: "draft", pages: 0, deals: 0, upsell: false },
+      { name: "Untitled Coaching Package", type: "Coaching", price: "—", status: "draft", pages: 0, deals: 0, upsell: false },
+    ];
+    const archived = [
+      { name: "Old Pricing Guide (v1)", type: "Ebook", price: "$19", status: "archived", pages: 0, deals: 0, upsell: false },
+    ];
+
+    return (
+      <div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <div>
+            <h1 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 2px", letterSpacing: "-0.02em" }}>Products</h1>
+            <p style={{ margin: 0, color: c.sub, fontSize: 13 }}>{paidLive.length} paid · {leadMagnets.length} lead magnets · {drafts.length} drafts · Last 30 days</p>
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            <AiBtn strong color={c.purple}>Generate Product</AiBtn>
+            <AiBtn color={c.blue} bg={c.blueLight} border={c.blueBorder}>Help Me Get Started</AiBtn>
+          </div>
+        </div>
+
+        <TabBar tabs={[
+          { key: "performance", label: "Performance" },
+          { key: "catalog", label: "Catalog" },
+          { key: "deals", label: "Deals" },
+        ]} active={productView} onChange={setProductView} />
+
+        {productView === "performance" && (
+          <>
+            {/* Revenue leaderboard + conversion */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 20 }}>
+              <Card style={{ padding: "18px 20px" }}>
+                <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 14 }}>Revenue by Product</div>
+                {[
+                  { name: "Creator Playbook", rev: 2847, pct: 53, color: c.blue },
+                  { name: "Creator Masterclass", rev: 1580, pct: 29, color: c.purple },
+                  { name: "Social Media Templates", rev: 522, pct: 10, color: c.green },
+                  { name: "Creator Starter Kit", rev: 418, pct: 8, color: c.amber },
+                ].map((p, i) => (
+                  <div key={i} style={{ marginBottom: 12 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 4 }}>
+                      <span style={{ fontWeight: 600 }}>{p.name}</span>
+                      <span style={{ fontWeight: 700 }}>${p.rev.toLocaleString()}</span>
+                    </div>
+                    <div style={{ height: 8, background: c.bg, borderRadius: 4, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${p.pct}%`, background: p.color, borderRadius: 4 }} />
+                    </div>
+                  </div>
+                ))}
+              </Card>
+
+              <Card style={{ padding: "18px 20px" }}>
+                <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 14 }}>Conversion Rates</div>
+                <div style={{ fontSize: 11, color: c.muted, marginBottom: 12 }}>Your average: 10.8% · Below-average highlighted</div>
+                {[
+                  { name: "Launch Checklist", rate: 27.9, ok: true },
+                  { name: "Free Creator Guide", rate: 24.0, ok: true },
+                  { name: "Creator Playbook", rate: 13.5, ok: true },
+                  { name: "Social Media Templates", rate: 11.5, ok: true },
+                  { name: "Creator Starter Kit", rate: 11.1, ok: true },
+                  { name: "Creator Masterclass", rate: 7.0, ok: false },
+                ].map((p, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+                    <span style={{ fontSize: 12, fontWeight: 600, width: 150, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>
+                    <ProgressBar value={p.rate} max={30} color={p.ok ? c.green : c.amber} />
+                    <span style={{ fontSize: 12, fontWeight: 700, color: p.ok ? c.text : c.amber, width: 45, textAlign: "right" }}>{p.rate}%</span>
+                    {!p.ok && <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>AI Redesign</AiBtn>}
+                  </div>
+                ))}
+              </Card>
+            </div>
+
+            {/* Optimization */}
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>✦ Optimize Your Products</div>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12, marginBottom: 20 }}>
+              {[
+                { title: "Missing Upsells", desc: "3 of 4 paid products", stat: "+40% avg revenue", products: ["Masterclass", "Templates", "Starter Kit"], cta: "Generate Upsell Ideas", color: c.amber, bg: c.amberLight, border: c.amberBorder, icon: "💰" },
+                { title: "Missing Order Bumps", desc: "3 of 4 paid products", stat: "+15% per transaction", products: ["Masterclass", "Templates", "Starter Kit"], cta: "Generate Bump Ideas", color: c.amber, bg: c.amberLight, border: c.amberBorder, icon: "📦" },
+                { title: "No Cart Recovery", desc: "2 products without", stat: "+15% recovered revenue", products: ["Templates", "Starter Kit"], cta: "Set Up Recovery", color: c.blue, bg: c.blueLight, border: c.blueBorder, icon: "🛒" },
+              ].map((o, i) => (
+                <Card key={i} style={{ padding: "16px 18px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                    <span style={{ fontSize: 18 }}>{o.icon}</span>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700 }}>{o.title}</div>
+                      <div style={{ fontSize: 11, color: c.muted }}>{o.desc}</div>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: o.color, marginBottom: 6 }}>{o.stat}</div>
+                  <div style={{ fontSize: 11, color: c.sub, marginBottom: 10 }}>
+                    {o.products.map((p, pi) => <span key={pi}>{pi > 0 && ", "}{p}</span>)}
+                  </div>
+                  <AiBtn color={o.color} bg={o.bg} border={o.border}>{o.cta}</AiBtn>
+                </Card>
+              ))}
+            </div>
+          </>
+        )}
+
+        {productView === "catalog" && (
+          <>
+            {/* Paid Products */}
+            <Card style={{ padding: "18px 20px", marginBottom: 16 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700 }}>Paid Products</div>
+                  <Pill bg={c.greenLight} color={c.green} border={c.greenBorder}>{paidLive.length}</Pill>
+                </div>
+                <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Generate a Product</AiBtn>
+              </div>
+              <TableHeader />
+              {paidLive.map((p, i) => <ProductRow key={i} p={p} />)}
+            </Card>
+
+            {/* Lead Magnets */}
+            <Card style={{ padding: "18px 20px", marginBottom: 16 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700 }}>Lead Magnets</div>
+                  <Pill bg={c.blueLight} color={c.blue} border={c.blueBorder}>{leadMagnets.length}</Pill>
+                </div>
+                <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Generate a Lead Magnet</AiBtn>
+              </div>
+              <TableHeader />
+              {leadMagnets.map((p, i) => <ProductRow key={i} p={p} />)}
+              <Card style={{ padding: "10px 14px", marginTop: 10, background: `linear-gradient(135deg, ${c.blueLight}, ${c.purpleLight})`, border: `1px solid ${c.blueBorder}` }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 700 }}>✦ Grow your list faster</div>
+                    <div style={{ fontSize: 11, color: c.sub }}>AI can create a free lead magnet based on your paid products to attract more customers.</div>
+                  </div>
+                  <AiBtn color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Generate Lead Magnet Idea</AiBtn>
+                </div>
+              </Card>
+            </Card>
+
+            {/* Drafts */}
+            <Card style={{ padding: "18px 20px", marginBottom: 16 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700 }}>Drafts</div>
+                  <Pill bg={c.amberLight} color={c.amber} border={c.amberBorder}>{drafts.length}</Pill>
+                </div>
+              </div>
+              <TableHeader />
+              {drafts.map((p, i) => <ProductRow key={i} p={p} />)}
+            </Card>
+
+            {/* Archived — collapsed by default feel */}
+            <Card style={{ padding: "14px 20px", opacity: 0.7 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700, color: c.sub }}>Archived</div>
+                  <Pill bg={c.bg} color={c.muted} border={c.border}>{archived.length}</Pill>
+                </div>
+                <span style={{ fontSize: 11, color: c.muted, cursor: "pointer" }}>Show ▾</span>
+              </div>
+            </Card>
+
+            {/* AI helper for newbies — always at bottom */}
+            <Card style={{ padding: "20px 24px", marginTop: 20, background: `linear-gradient(135deg, ${c.purpleLight}, ${c.blueLight})`, border: `1px solid ${c.purpleBorder}` }}>
+              <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 4 }}>✦ Not sure where to start?</div>
+              <div style={{ fontSize: 13, color: c.sub, marginBottom: 16 }}>Tell AI about your business and it'll help you figure out what to sell, how to price it, and how to get your first customers.</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
+                {[
+                  { icon: "💡", title: "Generate product ideas", desc: "AI suggests products based on your skills and audience" },
+                  { icon: "💰", title: "Help me price my product", desc: "AI analyzes your market and recommends pricing" },
+                  { icon: "📝", title: "Write my product for me", desc: "Generate an ebook, guide, or course outline with AI" },
+                  { icon: "🚀", title: "Build my launch plan", desc: "AI creates a step-by-step plan to get your first sales" },
+                ].map((item, i) => (
+                  <div key={i} style={{
+                    padding: "14px", background: "rgba(255,255,255,0.7)", borderRadius: 10,
+                    border: `1px solid ${c.purpleBorder}`, cursor: "pointer", transition: "all 0.15s",
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.transform = "translateY(-1px)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.7)"; e.currentTarget.style.transform = "translateY(0)"; }}>
+                    <div style={{ fontSize: 22, marginBottom: 6 }}>{item.icon}</div>
+                    <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 2 }}>✦ {item.title}</div>
+                    <div style={{ fontSize: 10, color: c.sub, lineHeight: 1.4 }}>{item.desc}</div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </>
+        )}
+
+        {productView === "deals" && (
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+            <Card style={{ padding: "18px 20px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <div style={{ fontSize: 13, fontWeight: 700 }}>Active Deals</div>
+                <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Generate Deal Ideas</AiBtn>
+              </div>
+              {[
+                { name: "LAUNCH20", type: "Coupon", detail: "20% off · All products", uses: 12, rev: "$93 saved" },
+                { name: "MASTER50", type: "Coupon", detail: "$50 off · Masterclass", uses: 3, rev: "$150 saved" },
+                { name: "Playbook + Kit", type: "Bundle", detail: "Save $10", sales: 8, rev: "$384" },
+              ].map((d, i) => (
+                <div key={i} style={{ padding: "10px 0", borderTop: i > 0 ? `1px solid ${c.border}` : "none", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 600 }}>{d.name}</div>
+                    <div style={{ fontSize: 11, color: c.muted }}>{d.type} · {d.detail}</div>
+                  </div>
+                  <div style={{ textAlign: "right" }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: c.blue }}>{d.uses || d.sales} {d.uses ? "uses" : "sales"}</div>
+                    <div style={{ fontSize: 10, color: c.muted }}>{d.rev}</div>
+                  </div>
+                </div>
+              ))}
+              <div style={{ marginTop: 12 }}><AiBtn>Generate a Deal</AiBtn></div>
+            </Card>
+
+            <Card style={{ padding: "18px 20px" }}>
+              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>Upsell & Bump Performance</div>
+              <div style={{ padding: "12px 14px", background: c.greenLight, borderRadius: 8, border: `1px solid ${c.greenBorder}`, marginBottom: 10 }}>
+                <div style={{ fontSize: 12, fontWeight: 600 }}>Creator Starter Kit (Upsell on Playbook)</div>
+                <div style={{ display: "flex", gap: 16, marginTop: 6 }}>
+                  <Metric label="Take Rate" value="34%" color={c.green} />
+                  <Metric label="Revenue" value="$498" />
+                </div>
+              </div>
+              <div style={{ padding: "12px 14px", background: c.greenLight, borderRadius: 8, border: `1px solid ${c.greenBorder}`, marginBottom: 10 }}>
+                <div style={{ fontSize: 12, fontWeight: 600 }}>Bonus Worksheets (Order Bump on Playbook)</div>
+                <div style={{ display: "flex", gap: 16, marginTop: 6 }}>
+                  <Metric label="Take Rate" value="28%" color={c.green} />
+                  <Metric label="Revenue" value="$143" />
+                </div>
+              </div>
+              <Card style={{ padding: "10px 14px", background: `linear-gradient(135deg, ${c.amberLight}, ${c.purpleLight})`, border: `1px solid ${c.amberBorder}` }}>
+                <div style={{ fontSize: 12, fontWeight: 700 }}>✦ 3 products have no upsell or bump</div>
+                <div style={{ fontSize: 11, color: c.sub, marginBottom: 6 }}>AI can generate upsell ideas based on each product's content and audience.</div>
+                <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Generate Upsell Ideas for All</AiBtn>
+              </Card>
+            </Card>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ════════════════════════════════════════════
+  //  PAGES PAGE
+  // ════════════════════════════════════════════
+  const PagesPage = () => {
+    const AI = () => <span style={{ fontSize: 11, marginRight: 2 }}>✦</span>;
+    const AiBtn = ({ children, color = c.blue, bg = c.blueLight, border = c.blueBorder, small, strong }) => (
+      <button style={{
+        background: strong ? `linear-gradient(135deg, ${color}, ${color}dd)` : bg,
+        color: strong ? "#fff" : color,
+        border: strong ? "none" : `1px solid ${border}`, borderRadius: strong ? 8 : 6,
+        padding: strong ? "8px 16px" : small ? "3px 8px" : "4px 11px",
+        fontSize: small ? 10 : strong ? 13 : 11, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
+        display: "inline-flex", alignItems: "center", gap: 3,
+      }}><AI />{children}</button>
+    );
+
+    return (
+      <div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <div>
+            <h1 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 2px", letterSpacing: "-0.02em" }}>Pages</h1>
+            <p style={{ margin: 0, color: c.sub, fontSize: 13 }}>8 pages · 7 live · samcarttiger.com</p>
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            <AiBtn strong color={c.purple}>Generate Page</AiBtn>
+            <AiBtn>Redesign a Page</AiBtn>
+          </div>
+        </div>
+
+        <TabBar tabs={[
+          { key: "overview", label: "Performance" },
+          { key: "all", label: "All Pages" },
+          { key: "domains", label: "Domains" },
+        ]} active={pagesTab} onChange={setPagesTab} />
+
+        {pagesTab === "overview" && (
+          <>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+              <Card style={{ padding: "16px 18px" }}><Metric label="Total Page Views" value="4,179" change="+18%" large /></Card>
+              <Card style={{ padding: "16px 18px" }}><Metric label="Avg Conversion Rate" value="17.2%" change="+2.1%" large /></Card>
+              <Card style={{ padding: "16px 18px" }}><Metric label="Revenue from Pages" value="$5,367" large sub="All checkout conversions" /></Card>
+              <Card style={{ padding: "16px 18px" }}><Metric label="Best Performer" value="Checklist" sub="27.9% conversion" large /></Card>
+            </div>
+
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Pages by Conversion Rate</div>
+            <Card style={{ padding: "18px 20px", marginBottom: 16 }}>
+              {/* Header */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 85px 70px 60px 55px 170px", gap: 8, alignItems: "center", padding: "0 0 6px", borderBottom: `2px solid ${c.border}`, marginBottom: 2 }}>
+                {["Page", "Type", "Views", "Trend", "Conv", ""].map((h, i) => (
+                  <div key={i} style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: c.muted }}>{h}</div>
+                ))}
+              </div>
+              {[
+                { name: "Launch Checklist Capture", product: "Launch Checklist", type: "Lead Capture", views: 312, rate: 27.9, trend: [22, 25, 24, 28, 30, 28, 27] },
+                { name: "Free Guide Capture", product: "Free Creator Guide", type: "Lead Capture", views: 847, rate: 24.0, trend: [20, 22, 21, 25, 26, 24, 23] },
+                { name: "Playbook Sales Page", product: "Creator Playbook", type: "Landing", views: 1203, rate: 23.6, trend: [20, 22, 21, 24, 25, 23, 22] },
+                { name: "Masterclass Replay", product: "Masterclass", type: "Landing", views: 634, rate: 17.7, trend: [15, 18, 16, 19, 18, 17, 16] },
+                { name: "Playbook Checkout", product: "Creator Playbook", type: "Checkout", views: 542, rate: 13.5, trend: [12, 14, 13, 15, 14, 13, 12] },
+                { name: "Templates Checkout", product: "Templates", type: "Checkout", views: 156, rate: 11.5, trend: [10, 12, 11, 13, 12, 11, 10] },
+                { name: "Starter Kit Checkout", product: "Starter Kit", type: "Checkout", views: 198, rate: 11.1, trend: [9, 11, 10, 12, 11, 10, 10] },
+                { name: "Masterclass Checkout", product: "Masterclass", type: "Checkout", views: 287, rate: 7.0, trend: [6, 8, 7, 8, 7, 6, 5], warn: true },
+              ].map((pg, i) => (
+                <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 85px 70px 60px 55px 170px", gap: 8, alignItems: "center", padding: "9px 0", borderBottom: `1px solid ${c.border}`, cursor: "pointer" }}
+                  onMouseEnter={e => e.currentTarget.style.background = c.bg}
+                  onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{pg.name}</div>
+                    <div style={{ fontSize: 10, color: c.muted }}>→ {pg.product}</div>
+                  </div>
+                  <div><Pill bg={c.blueLight} color={c.blue} border={c.blueBorder}>{pg.type}</Pill></div>
+                  <div style={{ fontSize: 12 }}>{pg.views.toLocaleString()}</div>
+                  <MiniSparkline data={pg.trend} color={pg.warn ? c.amber : c.green} width={50} height={18} />
+                  <div><span style={{ fontSize: 13, fontWeight: 700, color: pg.warn ? c.amber : c.text }}>{pg.rate}%</span></div>
+                  <div style={{ display: "flex", gap: 4 }}>
+                    <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>AI Redesign</AiBtn>
+                    <AiBtn small>Rewrite Copy</AiBtn>
+                    {pg.warn && <AiBtn small color={c.amber} bg={c.amberLight} border={c.amberBorder}>Fix ⚠️</AiBtn>}
+                  </div>
+                </div>
+              ))}
+            </Card>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 16 }}>
+              <Card style={{ padding: "14px 18px", borderLeft: `3px solid ${c.amber}` }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 700 }}>⚠️ Masterclass Checkout converts at 7.0%</div>
+                    <div style={{ fontSize: 11, color: c.sub }}>Your checkout average is 11.0%. AI can redesign the layout and rewrite the copy.</div>
+                  </div>
+                  <AiBtn color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>AI Redesign</AiBtn>
+                </div>
+              </Card>
+              <Card style={{ padding: "14px 18px", borderLeft: `3px solid ${c.blue}` }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                  <div>
+                    <div style={{ fontSize: 12, fontWeight: 700 }}>✦ Playbook Sales Page has 1,203 views</div>
+                    <div style={{ fontSize: 11, color: c.sub }}>High traffic page — a 1% conversion lift = $467 more per month.</div>
+                  </div>
+                  <AiBtn color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Optimize Headline</AiBtn>
+                </div>
+              </Card>
+            </div>
+
+            {/* Newbie helper */}
+            <Card style={{ padding: "16px 20px", background: `linear-gradient(135deg, ${c.purpleLight}88, ${c.blueLight}88)`, border: `1px solid ${c.purpleBorder}` }}>
+              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>✦ Page Building Help</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <AiBtn small color={c.purple} bg="rgba(255,255,255,0.7)" border={c.purpleBorder}>Generate a Checkout Page</AiBtn>
+                <AiBtn small color={c.purple} bg="rgba(255,255,255,0.7)" border={c.purpleBorder}>Generate a Landing Page</AiBtn>
+                <AiBtn small color={c.purple} bg="rgba(255,255,255,0.7)" border={c.purpleBorder}>Generate a Lead Capture</AiBtn>
+                <AiBtn small color={c.purple} bg="rgba(255,255,255,0.7)" border={c.purpleBorder}>Write Page Copy for Me</AiBtn>
+              </div>
+            </Card>
+          </>
+        )}
+      </div>
+    );
+  };
+
+  // ════════════════════════════════════════════
+  //  GROWTH PAGE
+  // ════════════════════════════════════════════
+  const GrowthPage = () => (
+    <div>
+      <div style={{ marginBottom: 16 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 2px", letterSpacing: "-0.02em" }}>Growth</h1>
+        <p style={{ margin: 0, color: c.sub, fontSize: 13 }}>Promote, experiment, and grow your business · Last 30 days</p>
+      </div>
+
+      <TabBar tabs={[
+        { key: "overview", label: "Overview" },
+        { key: "email", label: "Email" },
+        { key: "social", label: "Social Media" },
+        { key: "affiliates", label: "Affiliates" },
+        { key: "recovery", label: "Cart Recovery" },
+        { key: "experiments", label: "Experiments" },
+      ]} active={growthTab} onChange={setGrowthTab} />
+
+      {growthTab === "overview" && (
+        <>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+            <Card style={{ padding: "16px 18px" }}><Metric label="Total Traffic" value="4,179" change="+22%" large /></Card>
+            <Card style={{ padding: "16px 18px" }}><Metric label="From Email" value="1,847" change="+18%" large sub="44% of traffic" /></Card>
+            <Card style={{ padding: "16px 18px" }}><Metric label="From Social" value="1,523" change="+34%" large sub="36% of traffic" /></Card>
+            <Card style={{ padding: "16px 18px" }}><Metric label="From Affiliates" value="132" change="+61%" large sub="3% of traffic" /></Card>
+          </div>
+
+          {/* AI sparkle icon helper */}
+          {(() => {
+            const AI = () => <span style={{ fontSize: 12, marginRight: 3 }}>✦</span>;
+            const AiBtn = ({ children, color = c.blue, bg = c.blueLight, border = c.blueBorder, small, strong }) => (
+              <button style={{
+                background: strong ? `linear-gradient(135deg, ${color}, ${color}dd)` : bg,
+                color: strong ? "#fff" : color,
+                border: strong ? "none" : `1px solid ${border}`, borderRadius: strong ? 8 : 6,
+                padding: strong ? "8px 16px" : small ? "3px 8px" : "4px 11px",
+                fontSize: small ? 10 : strong ? 13 : 11, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
+                display: "inline-flex", alignItems: "center", gap: 3,
+              }}><AI />{children}</button>
+            );
+
+            return (
+              <>
+                {/* Email */}
+                <Card style={{ padding: "18px 20px", marginBottom: 16 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700 }}>📧 Email Campaigns</div>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <AiBtn strong color={c.blue}>Generate Campaign</AiBtn>
+                    </div>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 12, marginBottom: 14 }}>
+                    <Metric label="Sent" value="5,400" />
+                    <Metric label="Open Rate" value="38%" change="+3%" />
+                    <Metric label="Click Rate" value="12%" change="+1.5%" />
+                    <Metric label="Revenue from Email" value="$2,847" change="+18%" />
+                  </div>
+                  <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8 }}>Recent Campaigns</div>
+                  {[
+                    { name: "Playbook Launch Sequence", sent: 2400, opens: "42%", clicks: "14%", sales: 28 },
+                    { name: "Masterclass Webinar Invite", sent: 1200, opens: "36%", clicks: "11%", sales: 12 },
+                    { name: "Weekly Newsletter #23", sent: 1800, opens: "34%", clicks: "8%", sales: 4 },
+                  ].map((camp, i) => (
+                    <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderTop: i > 0 ? `1px solid ${c.border}` : "none" }}>
+                      <div style={{ fontSize: 12, fontWeight: 600 }}>{camp.name}</div>
+                      <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                        <span style={{ fontSize: 11, color: c.sub }}>{camp.opens} opens</span>
+                        <span style={{ fontSize: 11, color: c.sub }}>{camp.clicks} clicks</span>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: c.green }}>{camp.sales} sales</span>
+                        <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Optimize Subject</AiBtn>
+                        <AiBtn small>Improve Copy</AiBtn>
+                      </div>
+                    </div>
+                  ))}
+                  <Card style={{ padding: "12px 14px", marginTop: 12, background: `linear-gradient(135deg, ${c.blueLight}, ${c.purpleLight})`, border: `1px solid ${c.blueBorder}` }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 700 }}>✦ Your Masterclass has no email campaign</div>
+                        <div style={{ fontSize: 11, color: c.sub }}>AI can generate a full launch sequence based on your product and audience.</div>
+                      </div>
+                      <AiBtn strong color={c.purple}>Generate Launch Sequence</AiBtn>
+                    </div>
+                  </Card>
+                </Card>
+
+                {/* Social Media — full width row */}
+                <Card style={{ padding: "18px 20px", marginBottom: 16, overflow: "hidden" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 700 }}>📱 Social Media</div>
+                      <div style={{ fontSize: 11, color: c.muted }}>43 posts · 980 clicks · 140 conversions this month</div>
+                    </div>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <AiBtn strong color={c.purple}>Generate Campaign</AiBtn>
+                      <AiBtn>Generate Ideas</AiBtn>
+                      <Btn small>View Calendar</Btn>
+                    </div>
+                  </div>
+
+                  {/* Post carousel */}
+                  <div style={{ display: "flex", gap: 10, overflowX: "auto", paddingBottom: 8, scrollSnapType: "x mandatory", WebkitOverflowScrolling: "touch" }}>
+                    {[
+                      { platform: "Instagram", type: "Reel", title: "5 mistakes new creators make", status: "live", posted: "2d ago", clicks: 234, conv: 18, color: "#E4405F", preview: "🎬 5 Mistakes\nNew Creators Make\n\n(And how to avoid them)" },
+                      { platform: "Twitter/X", type: "Thread", title: "How I made $2k selling ebooks", status: "live", posted: "4d ago", clicks: 189, conv: 14, color: "#1DA1F2", preview: "🧵 Thread:\n\nHow I made $2,847\nselling a single ebook\nin 30 days.\n\nHere's exactly what I did ↓" },
+                      { platform: "LinkedIn", type: "Post", title: "Why every coach needs a digital product", status: "live", posted: "5d ago", clicks: 156, conv: 11, color: "#0A66C2", preview: "I used to trade hours for dollars.\n\nThen I packaged my expertise\ninto a $39 ebook.\n\nNow it sells while I sleep." },
+                      { platform: "Instagram", type: "Carousel", title: "3 pricing mistakes to avoid", status: "scheduled", posted: "Tomorrow 10am", clicks: null, conv: null, color: "#E4405F", preview: "Slide 1:\n🚫 Pricing Mistake #1\n\nUndercharging because\nyou don't feel 'expert enough'" },
+                      { platform: "Twitter/X", type: "Post", title: "Quick win: bundle your products", status: "scheduled", posted: "Wed 2pm", clicks: null, conv: null, color: "#1DA1F2", preview: "Hot take:\n\nIf you have 2+ products\nand no bundle,\nyou're leaving money\non the table.\n\nHere's why ↓" },
+                      { platform: "LinkedIn", type: "Article", title: "Creator economy 2026 trends", status: "draft", posted: null, clicks: null, conv: null, color: "#0A66C2", preview: "The Creator Economy\nin 2026:\n\n5 trends that will\ndefine this year\nfor digital sellers" },
+                      { platform: "ai", type: "Suggestion", title: "Generate more like your top performer", status: "ai", posted: null, clicks: null, conv: null, color: c.purple, preview: "✦ Based on your best post\n(234 clicks, 18 sales),\n\nAI can generate 5 variations\nacross all your platforms." },
+                    ].map((post, i) => (
+                      <div key={i} style={{
+                        flex: "0 0 190px", height: 300, scrollSnapAlign: "start",
+                        borderRadius: 10, border: `1px solid ${post.status === "ai" ? c.purpleBorder : c.border}`, overflow: "hidden",
+                        background: post.status === "ai" ? c.purpleLight : c.card, display: "flex", flexDirection: "column",
+                      }}>
+                        <div style={{
+                          background: post.status === "ai" ? `linear-gradient(135deg, ${c.purple}20, ${c.purple}08)` : `linear-gradient(135deg, ${post.color}18, ${post.color}08)`,
+                          padding: "14px 14px 12px", height: 115, overflow: "hidden",
+                          borderBottom: `1px solid ${post.status === "ai" ? c.purpleBorder : c.border}`, position: "relative",
+                        }}>
+                          <div style={{ fontSize: 11, fontWeight: 600, color: c.text, whiteSpace: "pre-line", lineHeight: 1.4 }}>
+                            {post.preview}
+                          </div>
+                          <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, height: 28, background: post.status === "ai" ? `linear-gradient(transparent, ${c.purple}08)` : `linear-gradient(transparent, ${post.color}08)` }} />
+                        </div>
+
+                        <div style={{ padding: "10px 14px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                          <div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 4 }}>
+                              {post.status !== "ai" && <span style={{ width: 8, height: 8, borderRadius: "50%", background: post.color, flexShrink: 0 }} />}
+                              {post.status === "ai" && <span style={{ fontSize: 10 }}>✦</span>}
+                              <span style={{ fontSize: 11, fontWeight: 700 }}>{post.status === "ai" ? "AI Suggestion" : post.platform}</span>
+                              {post.status !== "ai" && <span style={{ fontSize: 10, color: c.muted }}>· {post.type}</span>}
+                            </div>
+                            <div style={{ fontSize: 11, fontWeight: 600, color: c.text, marginBottom: 4, lineHeight: 1.3 }}>{post.title}</div>
+                          </div>
+
+                          <div>
+                            {post.status === "live" && (
+                              <>
+                                <div style={{ display: "flex", gap: 10, marginBottom: 6 }}>
+                                  <div><span style={{ fontSize: 13, fontWeight: 700 }}>{post.clicks}</span><span style={{ fontSize: 10, color: c.muted }}> clicks</span></div>
+                                  <div><span style={{ fontSize: 13, fontWeight: 700, color: c.green }}>{post.conv}</span><span style={{ fontSize: 10, color: c.muted }}> sales</span></div>
+                                </div>
+                                <div style={{ display: "flex", gap: 4 }}>
+                                  <Pill bg={c.greenLight} color={c.green} border={c.greenBorder} dot>Live</Pill>
+                                  <span style={{ fontSize: 10, color: c.muted, lineHeight: "22px" }}>{post.posted}</span>
+                                </div>
+                                <div style={{ marginTop: 6 }}><AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Remix</AiBtn></div>
+                              </>
+                            )}
+                            {post.status === "scheduled" && (
+                              <>
+                                <div style={{ display: "flex", gap: 4, alignItems: "center", marginBottom: 4 }}>
+                                  <Pill bg={c.blueLight} color={c.blue} border={c.blueBorder}>Scheduled</Pill>
+                                  <span style={{ fontSize: 10, color: c.muted }}>{post.posted}</span>
+                                </div>
+                                <div style={{ display: "flex", gap: 4 }}>
+                                  <Btn small>Edit</Btn>
+                                  <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Rewrite</AiBtn>
+                                </div>
+                              </>
+                            )}
+                            {post.status === "draft" && (
+                              <>
+                                <Pill bg={c.amberLight} color={c.amber} border={c.amberBorder}>Draft</Pill>
+                                <div style={{ marginTop: 6 }}><AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Finish with AI</AiBtn></div>
+                              </>
+                            )}
+                            {post.status === "ai" && (
+                              <AiBtn strong color={c.purple}>Generate 5 Posts</AiBtn>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </Card>
+
+                {/* Ideas and Experiments */}
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
+                  <Card style={{ padding: "18px 20px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700 }}>✦ AI Content Ideas</div>
+                      <AiBtn small>Regenerate</AiBtn>
+                    </div>
+                    <div style={{ fontSize: 11, color: c.muted, marginBottom: 12 }}>Based on your best-performing content, audience behavior, and trending topics</div>
+                    {[
+                      { idea: "Behind-the-scenes: Creating the Creator Playbook", reason: "Your process content gets 2× more clicks", platform: "Instagram Reel", confidence: "High" },
+                      { idea: "Poll: What's your biggest challenge as a creator?", reason: "Engagement posts drive 3× more profile visits", platform: "Twitter/X", confidence: "High" },
+                      { idea: "Case study: How [customer] used Starter Kit", reason: "Social proof posts have your highest conv. rate", platform: "LinkedIn", confidence: "Med" },
+                      { idea: "Quick tip: 3 pricing mistakes to avoid", reason: "Tip posts drive most email signups", platform: "Instagram Carousel", confidence: "Med" },
+                    ].map((item, i) => (
+                      <div key={i} style={{ padding: "10px 12px", background: c.bg, borderRadius: 8, marginBottom: 8 }}>
+                        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
+                          <div>
+                            <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 2 }}>{item.idea}</div>
+                            <div style={{ fontSize: 10, color: c.muted }}>{item.reason}</div>
+                          </div>
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "end", gap: 4 }}>
+                            <Pill bg={c.blueLight} color={c.blue} border={c.blueBorder}>{item.platform}</Pill>
+                            <Pill bg={item.confidence === "High" ? c.greenLight : c.amberLight} color={item.confidence === "High" ? c.green : c.amber} border={item.confidence === "High" ? c.greenBorder : c.amberBorder}>{item.confidence}</Pill>
+                          </div>
+                        </div>
+                        <div style={{ marginTop: 6, display: "flex", gap: 4 }}>
+                          <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Draft with AI</AiBtn>
+                          <AiBtn small>Generate Variations</AiBtn>
+                        </div>
+                      </div>
+                    ))}
+                  </Card>
+
+                  <Card style={{ padding: "18px 20px" }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700 }}>🧪 Experiments</div>
+                      <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Suggest Experiments</AiBtn>
+                    </div>
+                    <div style={{ padding: "12px 14px", background: c.purpleLight, border: `1px solid ${c.purpleBorder}`, borderRadius: 8, marginBottom: 10 }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start" }}>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 700 }}>$39 vs $49 — Creator Playbook</div>
+                          <div style={{ fontSize: 11, color: c.sub }}>Price test · 4 days left · 78% confidence</div>
+                        </div>
+                        <Pill bg={c.amberLight} color={c.amber} border={c.amberBorder}>Running</Pill>
+                      </div>
+                      <div style={{ display: "flex", gap: 16, marginTop: 10 }}>
+                        <div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: c.muted }}>VARIANT A ($39)</div>
+                          <div style={{ fontSize: 16, fontWeight: 700 }}>38 sales · $1,482</div>
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 10, fontWeight: 700, color: c.purple }}>VARIANT B ($49) ← LEADING</div>
+                          <div style={{ fontSize: 16, fontWeight: 700, color: c.purple }}>35 sales · $1,715</div>
+                        </div>
+                      </div>
+                      <div style={{ marginTop: 8, display: "flex", gap: 6 }}>
+                        <Btn color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>View Details</Btn>
+                        <AiBtn small>Analyze Results</AiBtn>
+                      </div>
+                    </div>
+
+                    <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 8, marginTop: 14 }}>✦ AI-Suggested Experiments</div>
+                    {[
+                      { name: "Redesign Masterclass checkout", reason: "7.0% conv vs 11.0% avg — AI can generate 3 layout variants", type: "Layout" },
+                      { name: "Rewrite Playbook email subjects", reason: "Question-style subjects get 8% more opens for your audience", type: "Subject Line" },
+                      { name: "Test Playbook headline variations", reason: "1,203 views/mo — small lift = big revenue impact", type: "Copy" },
+                    ].map((exp, i) => (
+                      <div key={i} style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "8px 0", borderTop: `1px solid ${c.border}` }}>
+                        <div>
+                          <div style={{ fontSize: 12, fontWeight: 600 }}>{exp.name}</div>
+                          <div style={{ fontSize: 10, color: c.muted }}>{exp.reason}</div>
+                        </div>
+                        <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Generate & Launch</AiBtn>
+                      </div>
+                    ))}
+                  </Card>
+                </div>
+              </>
+            );
+          })()}
+        </>
+      )}
+
+      {growthTab === "experiments" && (() => {
+        const AI = () => <span style={{ fontSize: 11, marginRight: 2 }}>✦</span>;
+        const AiBtn = ({ children, color = c.blue, bg = c.blueLight, border = c.blueBorder, small, strong }) => (
+          <button style={{
+            background: strong ? `linear-gradient(135deg, ${color}, ${color}dd)` : bg,
+            color: strong ? "#fff" : color,
+            border: strong ? "none" : `1px solid ${border}`, borderRadius: strong ? 8 : 6,
+            padding: strong ? "8px 16px" : small ? "3px 8px" : "4px 11px",
+            fontSize: small ? 10 : strong ? 13 : 11, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
+            display: "inline-flex", alignItems: "center", gap: 3,
+          }}><AI />{children}</button>
+        );
+        return (
+          <>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+              <div>
+                <div style={{ fontSize: 16, fontWeight: 700 }}>Experiments</div>
+                <div style={{ fontSize: 12, color: c.sub }}>1 running · 3 completed · 3 suggested</div>
+              </div>
+              <div style={{ display: "flex", gap: 6 }}>
+                <AiBtn strong color={c.purple}>Suggest Experiments</AiBtn>
+                <AiBtn>Create Experiment</AiBtn>
+              </div>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
+              <Card style={{ padding: "16px 18px" }}><Metric label="Active Experiments" value="1" large /></Card>
+              <Card style={{ padding: "16px 18px" }}><Metric label="Completed This Month" value="3" large /></Card>
+              <Card style={{ padding: "16px 18px" }}><Metric label="Revenue from Wins" value="+$840" large color={c.green} sub="From applied winners" /></Card>
+              <Card style={{ padding: "16px 18px" }}><Metric label="Avg Lift" value="+18%" large color={c.green} sub="Across all winners" /></Card>
+            </div>
+
+            {/* Active experiment - detailed */}
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>🧪 Running Now</div>
+            <Card style={{ padding: "20px 22px", marginBottom: 20, border: `2px solid ${c.purpleBorder}` }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 14 }}>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 700 }}>$39 vs $49 — Creator Playbook</div>
+                  <div style={{ fontSize: 12, color: c.sub }}>Price test · Started Feb 10 · 14 days planned</div>
+                </div>
+                <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                  <Pill bg={c.purpleLight} color={c.purple} border={c.purpleBorder}>Day 10 of 14</Pill>
+                  <Pill bg={c.amberLight} color={c.amber} border={c.amberBorder}>78% confidence</Pill>
+                </div>
+              </div>
+
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 14 }}>
+                <div style={{ padding: "14px 16px", background: c.bg, borderRadius: 8 }}>
+                  <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: c.muted, marginBottom: 6 }}>Control — $39</div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+                    <Metric label="Visitors" value="280" />
+                    <Metric label="Sales" value="38" />
+                    <Metric label="Revenue" value="$1,482" />
+                  </div>
+                  <div style={{ marginTop: 8 }}><ProgressBar value={38} max={45} color={c.blue} /></div>
+                  <div style={{ fontSize: 11, color: c.sub, marginTop: 4 }}>13.6% conversion · $5.29 per visitor</div>
+                </div>
+                <div style={{ padding: "14px 16px", background: `${c.purpleLight}`, borderRadius: 8, border: `1px solid ${c.purpleBorder}` }}>
+                  <div style={{ display: "flex", justifyContent: "space-between" }}>
+                    <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: c.purple, marginBottom: 6 }}>Variant B — $49 ← Leading</div>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+                    <Metric label="Visitors" value="275" />
+                    <Metric label="Sales" value="35" color={c.purple} />
+                    <Metric label="Revenue" value="$1,715" color={c.purple} />
+                  </div>
+                  <div style={{ marginTop: 8 }}><ProgressBar value={35} max={45} color={c.purple} /></div>
+                  <div style={{ fontSize: 11, color: c.sub, marginTop: 4 }}>12.7% conversion · <strong style={{ color: c.purple }}>$6.24 per visitor (+18%)</strong></div>
+                </div>
+              </div>
+
+              <div style={{ display: "flex", gap: 6 }}>
+                <AiBtn color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Analyze Results</AiBtn>
+                <AiBtn small>Predict Final Outcome</AiBtn>
+                <Btn small>End Early & Pick Winner</Btn>
+              </div>
+            </Card>
+
+            {/* Completed experiments */}
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>✅ Completed</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 20 }}>
+              {[
+                { name: "Checkout layout A vs B", product: "Creator Playbook", type: "Layout", winner: "Variant B", lift: "+22%", metric: "conversion", revenue: "+$420/mo", confidence: "96%", date: "Feb 8" },
+                { name: "Email subject: question vs statement", product: "Newsletter", type: "Subject Line", winner: "Question style", lift: "+8%", metric: "open rate", revenue: "+$280/mo", confidence: "94%", date: "Feb 2" },
+                { name: "Landing page headline test", product: "Masterclass", type: "Copy", winner: "Benefit-led", lift: "+14%", metric: "clickthrough", revenue: "+$140/mo", confidence: "92%", date: "Jan 24" },
+              ].map((exp, i) => (
+                <Card key={i} style={{ padding: "16px 18px" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 8 }}>
+                    <Pill bg={c.blueLight} color={c.blue} border={c.blueBorder}>{exp.type}</Pill>
+                    <span style={{ fontSize: 10, color: c.muted }}>{exp.date}</span>
+                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 2 }}>{exp.name}</div>
+                  <div style={{ fontSize: 11, color: c.muted, marginBottom: 10 }}>{exp.product}</div>
+                  <div style={{ display: "flex", gap: 10, marginBottom: 8 }}>
+                    <div>
+                      <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", color: c.muted }}>Winner</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: c.green }}>{exp.winner}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", color: c.muted }}>Lift</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: c.green }}>{exp.lift} {exp.metric}</div>
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", color: c.muted }}>Impact</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, color: c.green }}>{exp.revenue}</div>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 4 }}>
+                    <Pill bg={c.greenLight} color={c.green} border={c.greenBorder}>{exp.confidence} confidence</Pill>
+                    <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Run Follow-Up</AiBtn>
+                  </div>
+                </Card>
+              ))}
+            </div>
+
+            {/* AI Suggested experiments */}
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>✦ AI-Suggested Experiments</div>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12 }}>
+              {[
+                { name: "Redesign Masterclass checkout", reason: "7.0% conversion vs your 11.0% average. AI can generate 3 high-converting layout variants.", impact: "+$350/mo estimated", type: "Layout", product: "Masterclass" },
+                { name: "Test order bump on Templates", reason: "Your Playbook bump has a 28% take rate. Templates has no bump — easy win.", impact: "+$130/mo estimated", type: "Order Bump", product: "Templates" },
+                { name: "A/B test Playbook price at $49", reason: "Your current $39 vs $49 experiment is trending toward $49. Test $49 vs $59 next.", impact: "+$600/mo estimated", type: "Price", product: "Playbook" },
+              ].map((exp, i) => (
+                <Card key={i} style={{ padding: "16px 18px", background: `linear-gradient(135deg, ${c.purpleLight}44, transparent)`, border: `1px solid ${c.purpleBorder}` }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+                    <Pill bg={c.purpleLight} color={c.purple} border={c.purpleBorder}>{exp.type}</Pill>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: c.green }}>{exp.impact}</span>
+                  </div>
+                  <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 2 }}>{exp.name}</div>
+                  <div style={{ fontSize: 11, color: c.muted, marginBottom: 4 }}>{exp.product}</div>
+                  <div style={{ fontSize: 11, color: c.sub, marginBottom: 10, lineHeight: 1.4 }}>{exp.reason}</div>
+                  <AiBtn color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Generate & Launch</AiBtn>
+                </Card>
+              ))}
+            </div>
+          </>
+        );
+      })()}
+    </div>
+  );
+
+  // ════════════════════════════════════════════
+  //  SALES PAGE
+  // ════════════════════════════════════════════
+  const SalesPage = () => {
+    const AI = () => <span style={{ fontSize: 11, marginRight: 2 }}>✦</span>;
+    const AiBtn = ({ children, color = c.blue, bg = c.blueLight, border = c.blueBorder, small, strong }) => (
+      <button style={{
+        background: strong ? `linear-gradient(135deg, ${color}, ${color}dd)` : bg,
+        color: strong ? "#fff" : color,
+        border: strong ? "none" : `1px solid ${border}`, borderRadius: strong ? 8 : 6,
+        padding: strong ? "8px 16px" : small ? "3px 8px" : "4px 11px",
+        fontSize: small ? 10 : strong ? 13 : 11, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
+        display: "inline-flex", alignItems: "center", gap: 3,
+      }}><AI />{children}</button>
+    );
+
+    return (
+      <div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <div>
+            <h1 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 2px", letterSpacing: "-0.02em" }}>Sales</h1>
+            <p style={{ margin: 0, color: c.sub, fontSize: 13 }}>Revenue, orders, and customer insights · Last 30 days</p>
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            <AiBtn strong color={c.purple}>Analyze My Sales</AiBtn>
+            <AiBtn>Revenue Forecast</AiBtn>
+          </div>
+        </div>
+
+        <TabBar tabs={[
+          { key: "overview", label: "Analytics" },
+          { key: "orders", label: "Orders" },
+          { key: "customers", label: "Customers" },
+          { key: "payments", label: "Payments" },
+        ]} active={salesTab} onChange={setSalesTab} />
+
+        {salesTab === "overview" && (
+          <>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
+              <Card style={{ padding: "16px 18px" }}><Metric label="Net Revenue" value="$5,367" change="+23%" large /></Card>
+              <Card style={{ padding: "16px 18px" }}><Metric label="Orders" value="133" change="+12%" large /></Card>
+              <Card style={{ padding: "16px 18px" }}><Metric label="Avg Order Value" value="$40.35" change="+8%" large sub="$33.50 without upsells" /></Card>
+              <Card style={{ padding: "16px 18px" }}><Metric label="Refund Rate" value="1.5%" change="-0.3%" large sub="2 refunds this period" /></Card>
+            </div>
+
+            {/* AI Insight Banner */}
+            <Card style={{ padding: "14px 18px", marginBottom: 16, background: `linear-gradient(135deg, ${c.purpleLight}, ${c.blueLight})`, border: `1px solid ${c.purpleBorder}` }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <div style={{ width: 28, height: 28, borderRadius: 8, background: `linear-gradient(135deg, ${c.purple}, ${c.blue})`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 14, flexShrink: 0 }}>✦</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>AI Sales Insight</div>
+                  <div style={{ fontSize: 12, color: c.sub }}>Your revenue is up 23% but 82% comes from one product (Playbook). Diversifying with a mid-tier product ($49–$59) could reduce risk and grow revenue 30%+.</div>
+                </div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <AiBtn small color={c.purple} bg="rgba(255,255,255,0.7)" border={c.purpleBorder}>Generate Product Idea</AiBtn>
+                  <AiBtn small color={c.purple} bg="rgba(255,255,255,0.7)" border={c.purpleBorder}>Show Full Analysis</AiBtn>
+                </div>
+              </div>
+            </Card>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+              <Card style={{ padding: "18px 20px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>Revenue Trend</div>
+                  <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Forecast Next 30 Days</AiBtn>
+                </div>
+                <div style={{ display: "flex", gap: 4, height: 120, alignItems: "end" }}>
+                  {[820, 940, 1100, 980, 1240, 1380, 1520, 1290, 1640, 1780, 1560, 1890, 2100, 1950, 2200, 2350, 2100, 2500, 2650, 2400, 2700, 2847, 2600, 2950, 3100, 2800, 3200, 3400, 3100, 3500].map((v, i) => (
+                    <div key={i} style={{ flex: 1, background: i >= 28 ? c.blue : c.blueLight, borderRadius: "2px 2px 0 0", height: `${(v / 3500) * 100}%`, minWidth: 2 }} />
+                  ))}
+                </div>
+                <div style={{ display: "flex", justifyContent: "space-between", fontSize: 10, color: c.muted, marginTop: 4 }}>
+                  <span>30 days ago</span><span>Today</span>
+                </div>
+              </Card>
+
+              <Card style={{ padding: "18px 20px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>Revenue Sources</div>
+                  <AiBtn small>Optimize Channel Mix</AiBtn>
+                </div>
+                {[
+                  { source: "Email campaigns", rev: "$2,847", pct: 53, color: c.blue },
+                  { source: "Social media", rev: "$1,120", pct: 21, color: c.purple },
+                  { source: "Direct / organic", rev: "$918", pct: 17, color: c.green },
+                  { source: "Affiliates", rev: "$482", pct: 9, color: c.amber },
+                ].map((s, i) => (
+                  <div key={i} style={{ marginBottom: 10 }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12, marginBottom: 3 }}>
+                      <span style={{ fontWeight: 600 }}>{s.source}</span>
+                      <span style={{ fontWeight: 700 }}>{s.rev} <span style={{ color: c.muted, fontWeight: 500 }}>({s.pct}%)</span></span>
+                    </div>
+                    <div style={{ height: 6, background: c.bg, borderRadius: 3, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${s.pct}%`, background: s.color, borderRadius: 3 }} />
+                    </div>
+                  </div>
+                ))}
+              </Card>
+            </div>
+
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 16, marginBottom: 16 }}>
+              <Card style={{ padding: "18px 20px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>Customer Insights</div>
+                  <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Segment Customers</AiBtn>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <Metric label="Total Customers" value="108" sub="51 new this month" />
+                  <Metric label="Repeat Buyers" value="18%" sub="19 customers bought 2+" />
+                  <Metric label="Avg Lifetime Value" value="$49.70" change="+12%" />
+                </div>
+              </Card>
+
+              <Card style={{ padding: "18px 20px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>Upsell Impact</div>
+                  <AiBtn small>Generate Upsell Ideas</AiBtn>
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                  <Metric label="Upsell Revenue" value="$498" sub="9.3% of total revenue" />
+                  <Metric label="Upsell Take Rate" value="34%" sub="On Creator Playbook" />
+                  <Metric label="Order Bump Revenue" value="$143" sub="Bonus Worksheets" />
+                </div>
+                <div style={{ marginTop: 10, padding: "8px 10px", background: c.amberLight, borderRadius: 6, fontSize: 11, color: c.amber }}>
+                  <strong>3 products without upsells</strong> — potential +$1,000/mo
+                </div>
+              </Card>
+
+              <Card style={{ padding: "18px 20px" }}>
+                <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>✦ AI Action Items</div>
+                {[
+                  { text: "23 one-time buyers haven't returned", cta: "Generate Win-Back", color: c.purple },
+                  { text: "Masterclass has 5% refund rate", cta: "Analyze Feedback", color: c.purple },
+                  { text: "Top 10 customers worth $890 avg", cta: "Generate VIP Offer", color: c.purple },
+                  { text: "89 leads haven't purchased yet", cta: "Generate Nurture Sequence", color: c.purple },
+                ].map((a, i) => (
+                  <div key={i} style={{ padding: "7px 0", borderTop: i > 0 ? `1px solid ${c.border}` : "none", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: 11, color: c.text }}>{a.text}</span>
+                    <AiBtn small color={a.color} bg={c.purpleLight} border={c.purpleBorder}>{a.cta}</AiBtn>
+                  </div>
+                ))}
+              </Card>
+            </div>
+
+            {/* Recent orders */}
+            <Card style={{ padding: "18px 20px" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
+                <div style={{ fontSize: 13, fontWeight: 700 }}>Recent Orders</div>
+                <Btn small>View All Orders</Btn>
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 100px 80px 80px 70px", gap: 8, alignItems: "center", padding: "0 0 6px", borderBottom: `2px solid ${c.border}`, marginBottom: 2 }}>
+                {["Customer", "Product", "Amount", "Source", "Upsell"].map((h, i) => (
+                  <div key={i} style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: c.muted }}>{h}</div>
+                ))}
+              </div>
+              {[
+                { customer: "Sarah M.", product: "Playbook", amount: "$39", source: "Email", upsell: true, time: "2h ago" },
+                { customer: "Mike T.", product: "Masterclass", amount: "$79", source: "Social", upsell: false, time: "5h ago" },
+                { customer: "Emily R.", product: "Templates", amount: "$29", source: "Direct", upsell: false, time: "8h ago" },
+                { customer: "James K.", product: "Playbook", amount: "$58", source: "Affiliate", upsell: true, time: "12h ago" },
+                { customer: "Lisa W.", product: "Starter Kit", amount: "$19", source: "Email", upsell: false, time: "1d ago" },
+              ].map((o, i) => (
+                <div key={i} style={{ display: "grid", gridTemplateColumns: "1fr 100px 80px 80px 70px", gap: 8, alignItems: "center", padding: "8px 0", borderBottom: `1px solid ${c.border}` }}>
+                  <div>
+                    <span style={{ fontSize: 12, fontWeight: 600 }}>{o.customer}</span>
+                    <span style={{ fontSize: 10, color: c.muted, marginLeft: 6 }}>{o.time}</span>
+                  </div>
+                  <div style={{ fontSize: 12 }}>{o.product}</div>
+                  <div style={{ fontSize: 12, fontWeight: 700 }}>{o.amount}</div>
+                  <div><Pill bg={c.blueLight} color={c.blue} border={c.blueBorder}>{o.source}</Pill></div>
+                  <div>{o.upsell ? <Pill bg={c.greenLight} color={c.green} border={c.greenBorder}>+ Upsell</Pill> : <span style={{ fontSize: 10, color: c.muted }}>—</span>}</div>
+                </div>
+              ))}
+            </Card>
+          </>
+        )}
+      </div>
+    );
+  };
+
+  // ════════════════════════════════════════════
+  //  APPS PAGE
+  // ════════════════════════════════════════════
+  const AppsPage = () => {
+    const [appsTab, setAppsTab] = useState("marketplace");
+    const [appFilter, setAppFilter] = useState("all");
+    const [appSearch, setAppSearch] = useState("");
+
+    const apps = [
+      { name: "ActiveCampaign", creator: "Active Campaign", category: "marketing", desc: "Segment contacts and connect with marketing automation.", popular: false, installed: false, free: false, tier: "Free Trials+" },
+      { name: "Mailchimp", creator: "Mailchimp", category: "marketing", desc: "Automatically segment customers into Mailchimp email lists.", popular: true, installed: true, free: false, tier: "Free Trials+" },
+      { name: "Klaviyo", creator: "Klaviyo", category: "marketing", desc: "Personalized customer experiences across email, SMS, and mobile push.", popular: false, installed: false, free: false, tier: "Free Trials+" },
+      { name: "ConvertKit", creator: "ConvertKit", category: "marketing", desc: "Sustainable growth tools for creators. Automatically manage tags and purchases.", popular: false, installed: false, free: false, tier: "Free Trials+" },
+      { name: "HubSpot", creator: "HubSpot", category: "marketing", desc: "Add customers as contacts and segment into lists within HubSpot.", popular: true, installed: false, free: false, tier: "Free Trials+" },
+      { name: "Facebook", creator: "Meta", category: "marketing", desc: "Track ad performance with Facebook Conversions API.", popular: false, installed: true, free: true, tier: "Free" },
+      { name: "High Level", creator: "High Level", category: "marketing", desc: "Automatically add customers as contacts and manage them.", popular: true, installed: false, free: false, tier: "Free Trials+" },
+      { name: "Customer Portal", creator: "SamCart", category: "membership", desc: "Manage customers in one place — subscriptions, billing, invoices.", popular: false, installed: true, free: true, tier: "Free" },
+      { name: "Intercom", creator: "Intercom", category: "membership", desc: "AI-first customer service. Add or remove tags from users.", popular: false, installed: false, free: false, tier: "Free Trials+" },
+      { name: "Post Affiliate Pro", creator: "Post Affiliate Pro", category: "marketing", desc: "Create and manage your affiliate program with personalized commissions.", popular: false, installed: false, free: true, tier: "Free" },
+      { name: "ShipStation", creator: "ShipStation", category: "shipping", desc: "Automate shipping workflows and print labels from one dashboard.", popular: true, installed: false, free: false, tier: "Free Trials+" },
+      { name: "Teachable", creator: "Teachable", category: "courses", desc: "Deliver courses and automatically enroll students on purchase.", popular: false, installed: false, free: false, tier: "Free Trials+" },
+      { name: "Thinkific", creator: "Thinkific", category: "courses", desc: "Connect course delivery and manage student access seamlessly.", popular: false, installed: false, free: false, tier: "Free Trials+" },
+      { name: "Zapier", creator: "Zapier", category: "other", desc: "Connect SamCart to 5,000+ apps with automated workflows.", popular: true, installed: true, free: false, tier: "Free Trials+" },
+      { name: "Drip", creator: "Drip", category: "marketing", desc: "Powerful marketing automation that segments customers into campaigns.", popular: false, installed: false, free: true, tier: "Free" },
+    ];
+
+    const categories = [
+      { key: "all", label: "All" },
+      { key: "marketing", label: "Marketing" },
+      { key: "membership", label: "Membership" },
+      { key: "shipping", label: "Shipping" },
+      { key: "courses", label: "Course Platforms" },
+      { key: "other", label: "Other" },
+    ];
+
+    const installedApps = apps.filter(a => a.installed);
+    const filteredApps = apps
+      .filter(a => appFilter === "all" || a.category === appFilter)
+      .filter(a => !appSearch || a.name.toLowerCase().includes(appSearch.toLowerCase()));
+
+    return (
+      <div>
+        <div style={{ marginBottom: 16 }}>
+          <h1 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 2px", letterSpacing: "-0.02em" }}>Apps</h1>
+          <p style={{ margin: 0, color: c.sub, fontSize: 13 }}>Connect SamCart with your favorite tools · {installedApps.length} installed</p>
+        </div>
+
+        <TabBar tabs={[
+          { key: "marketplace", label: "App Marketplace" },
+          { key: "installed", label: `Installed (${installedApps.length})` },
+        ]} active={appsTab} onChange={setAppsTab} />
+
+        {appsTab === "marketplace" && (
+          <>
+            {/* Category filters */}
+            <div style={{ display: "flex", gap: 4, marginBottom: 12 }}>
+              {categories.map(cat => (
+                <button key={cat.key} onClick={() => setAppFilter(cat.key)} style={{
+                  padding: "5px 12px", borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: "pointer",
+                  background: appFilter === cat.key ? c.blue : "transparent",
+                  color: appFilter === cat.key ? "#fff" : c.sub,
+                  border: `1px solid ${appFilter === cat.key ? c.blue : c.border}`,
+                }}>{cat.label}</button>
+              ))}
+              <div style={{ marginLeft: "auto" }}>
+                <input placeholder="Search apps..." value={appSearch} onChange={e => setAppSearch(e.target.value)} style={{ padding: "5px 10px", borderRadius: 6, border: `1px solid ${c.border}`, fontSize: 12, width: 180, outline: "none" }} />
+              </div>
+            </div>
+
+            {/* App grid */}
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+              {filteredApps.map((app, i) => (
+                <Card key={i} style={{ padding: "16px 18px", display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                  <div>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 10 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                        <div style={{ width: 36, height: 36, borderRadius: 8, background: c.blueLight, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 800, color: c.blue }}>
+                          {app.name[0]}
+                        </div>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 700 }}>{app.name}</div>
+                          <div style={{ fontSize: 10, color: c.muted }}>{app.creator} · {app.tier}</div>
+                        </div>
+                      </div>
+                      <div style={{ display: "flex", gap: 4 }}>
+                        {app.popular && <Pill bg={c.greenLight} color={c.green} border={c.greenBorder}>Popular</Pill>}
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 12, color: c.sub, lineHeight: 1.5, marginBottom: 12 }}>{app.desc}</div>
+                  </div>
+                  {app.installed ? (
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <Pill bg={c.greenLight} color={c.green} border={c.greenBorder} dot>Installed</Pill>
+                      <Btn small>Configure</Btn>
+                    </div>
+                  ) : (
+                    <Btn>Install</Btn>
+                  )}
+                </Card>
+              ))}
+            </div>
+          </>
+        )}
+
+        {appsTab === "installed" && (
+          <div>
+            {installedApps.length === 0 ? (
+              <Card style={{ padding: "40px", textAlign: "center" }}>
+                <div style={{ fontSize: 14, color: c.sub }}>No apps installed yet. Browse the marketplace to get started.</div>
+              </Card>
+            ) : (
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 12 }}>
+                {installedApps.map((app, i) => (
+                  <Card key={i} style={{ padding: "16px 18px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                      <div style={{ width: 36, height: 36, borderRadius: 8, background: c.greenLight, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 800, color: c.green }}>
+                        {app.name[0]}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 13, fontWeight: 700 }}>{app.name}</div>
+                        <div style={{ fontSize: 10, color: c.muted }}>{app.creator}</div>
+                      </div>
+                    </div>
+                    <div style={{ fontSize: 12, color: c.sub, marginBottom: 12 }}>{app.desc}</div>
+                    <div style={{ display: "flex", gap: 6 }}>
+                      <Btn small>Configure</Btn>
+                      <Btn small color={c.rose} bg={c.roseLight} border={c.roseBorder}>Uninstall</Btn>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ─── Router ───
+  const pages = { home: HomePage, products: ProductsPage, pages: PagesPage, growth: GrowthPage, sales: SalesPage, apps: AppsPage };
+  const CurrentPage = pages[currentPage] || HomePage;
+
+  return (
+    <div style={{ fontFamily: "'DM Sans', -apple-system, sans-serif", background: c.bg, minHeight: "100vh", color: c.text }}>
+      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet" />
+      <Nav />
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 28px 100px" }}>
+        <CurrentPage />
+      </div>
+      {/* Global AI Command Bar — sticky bottom */}
+      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 20, background: `linear-gradient(transparent, ${c.bg} 20%)`, padding: "20px 28px 16px" }}>
+        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+          <div style={{ background: c.card, borderRadius: 14, border: `1px solid ${c.purpleBorder}`, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 -4px 24px rgba(0,0,0,0.08), 0 0 0 1px rgba(117,52,237,0.1)" }}>
+            <div style={{ width: 30, height: 30, borderRadius: 8, background: `linear-gradient(135deg, ${c.purple}, ${c.blue})`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 15, flexShrink: 0 }}>✦</div>
+            <input placeholder="Ask anything — 'Increase my revenue', 'Write an email campaign', 'Why are Masterclass sales down?', 'Generate 5 social posts'..." style={{ flex: 1, border: "none", background: "transparent", padding: "6px 4px", fontSize: 13, outline: "none", color: c.text }} />
+            <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
+              <span style={{ fontSize: 10, color: c.muted, padding: "4px 8px", background: c.bg, borderRadius: 4, cursor: "pointer" }}>Products</span>
+              <span style={{ fontSize: 10, color: c.muted, padding: "4px 8px", background: c.bg, borderRadius: 4, cursor: "pointer" }}>Pages</span>
+              <span style={{ fontSize: 10, color: c.muted, padding: "4px 8px", background: c.bg, borderRadius: 4, cursor: "pointer" }}>Email</span>
+              <span style={{ fontSize: 10, color: c.muted, padding: "4px 8px", background: c.bg, borderRadius: 4, cursor: "pointer" }}>Sales</span>
+            </div>
+            <button style={{ background: `linear-gradient(135deg, ${c.purple}, ${c.purple}dd)`, color: "#fff", border: "none", borderRadius: 8, padding: "7px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+              <span style={{ fontSize: 12 }}>✦</span> Ask AI
+            </button>
+          </div>
+          <div style={{ textAlign: "center", fontSize: 10, color: c.muted, marginTop: 4 }}>AI can access your products, pages, campaigns, orders, and analytics to help you grow.</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
