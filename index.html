@@ -35,7 +35,7 @@
 // SAMCART — Section Landing Pages Mockup
 // ════════════════════════════════════════════
 
-const Dashboard = () => {
+const Dashboard = ({ onNewBusiness }) => {
   const [currentPage, setCurrentPage] = useState("home");
   const [expandedProduct, setExpandedProduct] = useState("playbook");
   const [productView, setProductView] = useState("performance");
@@ -187,7 +187,8 @@ const Dashboard = () => {
           cursor: "pointer", marginLeft: 6, marginBottom: 5, height: 18,
         }}
         onMouseEnter={e => e.currentTarget.style.background = c.purpleLight}
-        onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+        onMouseLeave={e => e.currentTarget.style.background = "transparent"}
+        onClick={onNewBusiness}>
           <span style={{ fontSize: 11, fontWeight: 700, color: c.purple, lineHeight: 1 }}>+</span>
           <span style={{ fontSize: 9, fontWeight: 600, color: c.purple }}>New</span>
         </button>
@@ -1513,14 +1514,27 @@ const Onboarding = ({ onComplete }) => {
   // Carousel auto-rotate — pure DOM, no React
   useEffect(() => {
     if (step !== "generating") return;
-    const swap = (pos) => {
-      if (trackRef.current) trackRef.current.style.transform = pos === 0 ? "translateX(0)" : "translateX(-440px)";
-      if (dotRefs.current[0]) { dotRefs.current[0].style.width = pos === 0 ? "24px" : "8px"; dotRefs.current[0].style.background = pos === 0 ? oc.purple : oc.border; }
-      if (dotRefs.current[1]) { dotRefs.current[1].style.width = pos === 1 ? "24px" : "8px"; dotRefs.current[1].style.background = pos === 1 ? oc.purple : oc.border; }
-    };
     const interval = setInterval(() => {
-      carouselPos.current = carouselPos.current === 0 ? 1 : 0;
-      swap(carouselPos.current);
+      carouselPos.current += 1;
+      const pos = carouselPos.current;
+      const track = trackRef.current;
+      if (!track) return;
+      // Slide to next position
+      track.style.transform = `translateX(${-pos * 440}px)`;
+      // Update dots
+      const dotIdx = pos % 2;
+      if (dotRefs.current[0]) { dotRefs.current[0].style.width = dotIdx === 0 ? "24px" : "8px"; dotRefs.current[0].style.background = dotIdx === 0 ? oc.purple : oc.border; }
+      if (dotRefs.current[1]) { dotRefs.current[1].style.width = dotIdx === 1 ? "24px" : "8px"; dotRefs.current[1].style.background = dotIdx === 1 ? oc.purple : oc.border; }
+      // If we just slid to the clone (pos 2), wait for transition to finish then jump back
+      if (pos === 2) {
+        setTimeout(() => {
+          track.style.transition = "none";
+          track.style.transform = "translateX(0)";
+          track.offsetHeight; // force reflow
+          track.style.transition = "transform 0.7s cubic-bezier(0.4, 0, 0.2, 1)";
+          carouselPos.current = 0;
+        }, 750); // slightly longer than the 700ms transition
+      }
     }, 4000);
     return () => clearInterval(interval);
   }, [step]);
@@ -1588,8 +1602,104 @@ const Onboarding = ({ onComplete }) => {
           </div>
           <button onClick={startGeneration} style={{ width: "100%", padding: 14, borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${oc.purple}, ${oc.blue})`, color: "#fff", fontSize: 15, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>✦ Generate My Business</button>
         </div>
-        <div style={{ flex: 1, background: `linear-gradient(135deg, ${oc.purpleLight}, ${oc.blueLight})`, padding: 40, display: "flex", alignItems: "center", justifyContent: "center", borderLeft: `1px solid ${oc.border}` }}>
-          <div style={{ fontSize: 14, color: oc.sub }}>Preview will appear here</div>
+        <div style={{ flex: 1, background: `linear-gradient(135deg, ${oc.purpleLight}, ${oc.blueLight})`, padding: "32px 36px", display: "flex", alignItems: "center", justifyContent: "center", borderLeft: `1px solid ${oc.border}`, overflow: "auto" }}>
+          {/* Magazine-style brand preview */}
+          <div style={{ width: "100%", maxWidth: 400 }}>
+            {/* Main card — white magazine page */}
+            <div style={{ background: "#fff", borderRadius: 16, overflow: "hidden", boxShadow: "0 16px 48px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.04)" }}>
+              {/* Hero band with primary color */}
+              <div style={{ background: pc, padding: "32px 28px 24px", position: "relative" }}>
+                <div style={{ position: "absolute", top: 0, right: 0, width: 120, height: 120, borderRadius: "0 0 0 120px", background: sc, opacity: 0.2 }} />
+                <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.15em", color: "#ffffff80", marginBottom: 12 }}>Brand Preview</div>
+                <div style={{ fontSize: 26, fontWeight: 800, color: "#fff", lineHeight: 1.15, letterSpacing: "-0.02em", marginBottom: 6 }}>Your brand,<br/>beautifully crafted</div>
+                <div style={{ fontSize: 12, color: "#ffffffaa", lineHeight: 1.5 }}>A preview of how your pages and products will look</div>
+              </div>
+
+              <div style={{ padding: "24px 28px" }}>
+                {/* Color palette strip */}
+                <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+                  {[pc, sc, "#0D9668"].map((col, i) => (
+                    <div key={i} style={{ flex: 1, textAlign: "center" }}>
+                      <div style={{ height: 40, borderRadius: 8, background: col, marginBottom: 4 }} />
+                      <div style={{ fontSize: 9, color: oc.muted, fontWeight: 600 }}>{col.toUpperCase()}</div>
+                    </div>
+                  ))}
+                  <div style={{ flex: 1, textAlign: "center" }}>
+                    <div style={{ height: 40, borderRadius: 8, background: "#1A1A2E", marginBottom: 4 }} />
+                    <div style={{ fontSize: 9, color: oc.muted, fontWeight: 600 }}>TEXT</div>
+                  </div>
+                </div>
+
+                {/* Typography sample */}
+                <div style={{ marginBottom: 20 }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: oc.muted, marginBottom: 8 }}>Typography</div>
+                  <div style={{ fontSize: 20, fontWeight: 800, color: "#1A1A2E", letterSpacing: "-0.02em", marginBottom: 2 }}>DM Sans Bold</div>
+                  <div style={{ fontSize: 14, fontWeight: 500, color: oc.sub, marginBottom: 2 }}>DM Sans Regular for body text</div>
+                  <div style={{ fontSize: 11, color: oc.muted }}>Aa Bb Cc Dd Ee 1234567890</div>
+                </div>
+
+                {/* Mock landing page section */}
+                <div style={{ background: oc.bg, borderRadius: 10, padding: 16, marginBottom: 16, border: `1px solid ${oc.border}` }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: oc.muted, marginBottom: 10 }}>Landing Page</div>
+                  <div style={{ display: "flex", gap: 12 }}>
+                    {/* Image placeholder */}
+                    <div style={{ width: 80, height: 80, borderRadius: 8, background: `linear-gradient(135deg, ${pc}18, ${sc}18)`, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 6, background: `${pc}30` }} />
+                    </div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ width: "90%", height: 10, background: `${pc}25`, borderRadius: 3, marginBottom: 5 }} />
+                      <div style={{ width: "70%", height: 10, background: `${pc}15`, borderRadius: 3, marginBottom: 8 }} />
+                      <div style={{ width: "100%", height: 6, background: oc.border, borderRadius: 3, marginBottom: 4 }} />
+                      <div style={{ width: "85%", height: 6, background: oc.border, borderRadius: 3, marginBottom: 8 }} />
+                      <div style={{ display: "flex", gap: 6 }}>
+                        <div style={{ height: 22, width: 70, background: pc, borderRadius: 5 }} />
+                        <div style={{ height: 22, width: 60, borderRadius: 5, border: `1.5px solid ${pc}40` }} />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Mock product card */}
+                <div style={{ background: oc.bg, borderRadius: 10, padding: 16, marginBottom: 16, border: `1px solid ${oc.border}` }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: oc.muted, marginBottom: 10 }}>Product Card</div>
+                  <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                    <div style={{ width: 48, height: 48, borderRadius: 10, background: `linear-gradient(135deg, ${pc}20, ${sc}20)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18 }}>📦</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, fontWeight: 700, color: "#1A1A2E", marginBottom: 2 }}>Watercolor Masterclass</div>
+                      <div style={{ fontSize: 11, color: oc.muted }}>Online course · Digital delivery</div>
+                    </div>
+                    <div style={{ fontSize: 18, fontWeight: 800, color: pc }}>$49</div>
+                  </div>
+                </div>
+
+                {/* Button styles */}
+                <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: oc.muted, marginBottom: 8 }}>Buttons</div>
+                <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+                  <div style={{ height: 32, flex: 1, background: pc, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#fff" }}>Buy Now</span>
+                  </div>
+                  <div style={{ height: 32, flex: 1, borderRadius: 8, border: `2px solid ${pc}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: pc }}>Learn More</span>
+                  </div>
+                  <div style={{ height: 32, flex: 1, background: sc, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ fontSize: 11, fontWeight: 700, color: "#fff" }}>Subscribe</span>
+                  </div>
+                </div>
+
+                {/* Social proof mockup */}
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <div style={{ display: "flex" }}>
+                    {[pc, sc, "#0D9668", "#CF8A06"].map((col, i) => (
+                      <div key={i} style={{ width: 22, height: 22, borderRadius: "50%", background: col + "35", border: "2px solid #fff", marginLeft: i > 0 ? -6 : 0, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 8, color: col, fontWeight: 700 }}>{String.fromCharCode(65+i)}</div>
+                    ))}
+                  </div>
+                  <div style={{ fontSize: 10, color: oc.sub }}>Trusted by <span style={{ fontWeight: 700, color: "#1A1A2E" }}>2,400+</span> creators</div>
+                </div>
+              </div>
+            </div>
+
+            <div style={{ textAlign: "center", fontSize: 11, color: oc.muted, marginTop: 12 }}>Your brand kit — colors, type, and components</div>
+          </div>
         </div>
       </div>
 
@@ -1693,6 +1803,43 @@ const Onboarding = ({ onComplete }) => {
               </div>
             </div>
 
+            {/* EBOOK CARD (clone) */}
+            {/* EBOOK CLONE */}
+            <div style={{ width: 420, flexShrink: 0 }}>
+              <div style={{ background: oc.card, borderRadius: 12, border: `1px solid ${oc.border}`, overflow: "hidden", boxShadow: "0 12px 40px rgba(0,0,0,0.1)" }}>
+                <div style={{ padding: "8px 12px", background: "#2C2C2E", display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ display: "flex", gap: 5 }}>
+                    <div style={{ width: 9, height: 9, borderRadius: "50%", background: "#FF5F57" }} />
+                    <div style={{ width: 9, height: 9, borderRadius: "50%", background: "#FFBD2E" }} />
+                    <div style={{ width: 9, height: 9, borderRadius: "50%", background: "#28CA42" }} />
+                  </div>
+                  <span style={{ fontSize: 12, marginLeft: 8 }}>📄</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: "#E5E5EA" }}>watercolor-course.pdf</span>
+                  <span style={{ marginLeft: "auto", fontSize: 10, fontWeight: 700, color: "#A78BFA" }}>Writing...</span>
+                </div>
+                <div style={{ padding: "24px 28px", minHeight: 370, background: "#FAFAFA", position: "relative" }}>
+                  <div className="el" data-reveal="2" style={{ opacity: 0, transform: "translateY(6px)", textAlign: "center", marginBottom: 20 }}>
+                    <div style={{ width: "65%", height: 16, background: pc + "30", borderRadius: 4, margin: "0 auto 6px" }} />
+                    <div style={{ width: "40%", height: 10, background: pc + "15", borderRadius: 4, margin: "0 auto" }} />
+                  </div>
+                  <div className="el" data-reveal="8" style={{ opacity: 0, transform: "translateY(6px)", width: "100%", height: 1, background: oc.border, marginBottom: 16 }} />
+                  <div className="el" data-reveal="10" style={{ opacity: 0, transform: "translateY(6px)", width: "50%", height: 11, background: pc + "25", borderRadius: 3, marginBottom: 10 }} />
+                  <div className="el" data-reveal="14" style={{ opacity: 0, transform: "translateY(6px)", marginBottom: 14 }}>
+                    {[94,88,96,78,92,65,88].map((w,i) => <div key={i} style={{ width: `${w}%`, height: 7, background: oc.border, borderRadius: 3, marginBottom: 5 }} />)}
+                  </div>
+                  <div className="el" data-reveal="24" style={{ opacity: 0, transform: "translateY(6px)", width: "100%", height: 90, background: `linear-gradient(135deg, ${pc}08, ${sc}08)`, borderRadius: 6, border: `1px solid ${oc.border}`, marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ fontSize: 11, color: oc.muted }}>[ illustration ]</span>
+                  </div>
+                  <div className="el" data-reveal="32" style={{ opacity: 0, transform: "translateY(6px)", width: "45%", height: 11, background: pc + "25", borderRadius: 3, marginBottom: 10 }} />
+                  <div className="el" data-reveal="36" style={{ opacity: 0, transform: "translateY(6px)" }}>
+                    {[90,85,92,70,88].map((w,i) => <div key={i} style={{ width: `${w}%`, height: 7, background: oc.border, borderRadius: 3, marginBottom: 5 }} />)}
+                  </div>
+                  <div className="shimmer" />
+                </div>
+              </div>
+            </div>
+
+
           </div>
         </div>
 
@@ -1788,13 +1935,18 @@ const Onboarding = ({ onComplete }) => {
 // ════════════════════════════════════════════
 const Root = () => {
   const [mode, setMode] = useState("onboarding");
+  const [onboardingKey, setOnboardingKey] = useState(0);
+  const startNewBusiness = () => {
+    setOnboardingKey(prev => prev + 1);
+    setMode("onboarding");
+  };
   return (
     <div>
       <div style={{ display: mode === "onboarding" ? "block" : "none" }}>
-        <Onboarding onComplete={() => setMode("dashboard")} />
+        <Onboarding key={onboardingKey} onComplete={() => setMode("dashboard")} />
       </div>
       <div style={{ display: mode === "dashboard" ? "block" : "none" }}>
-        <Dashboard />
+        <Dashboard onNewBusiness={startNewBusiness} />
       </div>
     </div>
   );
