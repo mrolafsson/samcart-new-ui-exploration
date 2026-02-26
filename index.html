@@ -5,15 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SamCart — Navigation Prototype</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet" />
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'DM Sans', -apple-system, sans-serif; }
-    button { font-family: inherit; }
-    input { font-family: inherit; }
-    ::-webkit-scrollbar { height: 6px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
-  </style>
+  <style>* { margin: 0; padding: 0; box-sizing: border-box; } body { font-family: 'DM Sans', -apple-system, sans-serif; } button { font-family: inherit; } input { font-family: inherit; } ::-webkit-scrollbar { height: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }</style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
@@ -149,17 +141,17 @@ const App = () => {
             <span style={{ fontSize: 12, fontWeight: i === activeBiz ? 700 : 500, color: i === activeBiz ? c.text : c.sub, whiteSpace: "nowrap" }}>{b.name}</span>
           </div>
         ))}
-        {/* + New Business tab */}
-        <div style={{
-          display: "flex", alignItems: "center", gap: 4, padding: "7px 12px",
-          borderRadius: "8px 8px 0 0", cursor: "pointer", marginBottom: -1,
-          border: "1px solid transparent",
+        {/* + New Business button */}
+        <button style={{
+          display: "flex", alignItems: "center", gap: 4, padding: "0 10px",
+          border: `1px dashed ${c.purpleBorder}`, borderRadius: 6, background: "transparent",
+          cursor: "pointer", marginLeft: 8, marginBottom: 7, height: 22,
         }}
         onMouseEnter={e => e.currentTarget.style.background = c.purpleLight}
         onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-          <span style={{ fontSize: 14, fontWeight: 700, color: c.purple, lineHeight: 1 }}>+</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: c.purple, lineHeight: 1 }}>+</span>
           <span style={{ fontSize: 11, fontWeight: 600, color: c.purple }}>New</span>
-        </div>
+        </button>
 
         {/* User avatar far right */}
         <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", paddingBottom: 6 }}>
@@ -204,24 +196,8 @@ const App = () => {
             <h1 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 2px", letterSpacing: "-0.02em" }}>Your Business</h1>
             <p style={{ margin: 0, color: c.sub, fontSize: 13 }}>Last 30 days · 6 live products</p>
           </div>
-          <div style={{ display: "flex", gap: 6 }}>
-            <AiBtn strong color={c.purple}>Generate Product</AiBtn>
-            <AiBtn>What Should I Do Next?</AiBtn>
-          </div>
+          <AiBtn strong color={c.purple}>Generate Product</AiBtn>
         </div>
-
-        {/* Quick Actions - right at top */}
-        <Card style={{ padding: "10px 18px", marginBottom: 16, background: `linear-gradient(135deg, ${c.purpleLight}88, ${c.blueLight}88)`, border: `1px solid ${c.purpleBorder}` }}>
-          <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
-            <span style={{ fontSize: 11, fontWeight: 700, color: c.purple, marginRight: 4 }}>✦ Quick Actions</span>
-            <AiBtn small color={c.purple} bg="rgba(255,255,255,0.7)" border={c.purpleBorder}>Generate a Product</AiBtn>
-            <AiBtn small color={c.purple} bg="rgba(255,255,255,0.7)" border={c.purpleBorder}>Generate a Page</AiBtn>
-            <AiBtn small color={c.purple} bg="rgba(255,255,255,0.7)" border={c.purpleBorder}>Generate Email Campaign</AiBtn>
-            <AiBtn small color={c.purple} bg="rgba(255,255,255,0.7)" border={c.purpleBorder}>Generate Social Posts</AiBtn>
-            <AiBtn small color={c.purple} bg="rgba(255,255,255,0.7)" border={c.purpleBorder}>Run an Experiment</AiBtn>
-            <AiBtn small color={c.purple} bg="rgba(255,255,255,0.7)" border={c.purpleBorder}>Analyze My Business</AiBtn>
-          </div>
-        </Card>
 
         <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
           {[
@@ -239,26 +215,14 @@ const App = () => {
           ))}
         </div>
 
-        {/* Attention alerts */}
-        <Card style={{ padding: "14px 18px", marginBottom: 10, borderLeft: `3px solid ${c.purple}` }}>
+        {/* Single attention alert — only things requiring action */}
+        <Card style={{ padding: "14px 18px", marginBottom: 16, borderLeft: `3px solid ${c.purple}` }}>
           <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
               <span style={{ fontSize: 16 }}>🧪</span>
               <span style={{ fontSize: 13 }}><strong>$39 vs $49 experiment</strong> on Creator Playbook is at 78% confidence · 4 days left</span>
             </div>
-            <div style={{ display: "flex", gap: 6 }}>
-              <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Analyze Results</AiBtn>
-              <Btn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>View Experiment</Btn>
-            </div>
-          </div>
-        </Card>
-        <Card style={{ padding: "14px 18px", marginBottom: 16, borderLeft: `3px solid ${c.green}` }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-              <span style={{ fontSize: 16 }}>📈</span>
-              <span style={{ fontSize: 13 }}><strong>Social media is driving 2× more leads</strong> than email for your free content this week.</span>
-            </div>
-            <AiBtn small>Generate More Social Posts</AiBtn>
+            <Btn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>View Experiment</Btn>
           </div>
         </Card>
 
@@ -303,37 +267,22 @@ const App = () => {
                   <div style={{ fontSize: 18, fontWeight: 700, color: p.warn ? c.amber : c.text }}>{p.conv}{p.warn && " ⚠️"}</div>
                 </div>
                 <div style={{ marginLeft: "auto", display: "flex", gap: 4 }}>
-                  {p.warn && <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>AI Redesign Page</AiBtn>}
+                  {p.warn && <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>AI Redesign</AiBtn>}
                   {!p.hasUpsell && !p.free && <AiBtn small>Generate Upsell</AiBtn>}
-                  {p.noConnect && <AiBtn small color={c.amber} bg={c.amberLight} border={c.amberBorder}>Connect to Product</AiBtn>}
-                  {!p.warn && !p.free && p.hasUpsell && <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Optimize</AiBtn>}
+                  {p.noConnect && <Btn small color={c.amber} bg={c.amberLight} border={c.amberBorder}>Connect Product</Btn>}
                 </div>
               </div>
             </Card>
           ))}
         </div>
 
-        {/* AI opportunity cards */}
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 16 }}>
-          <Card style={{ padding: "14px 18px", borderLeft: `3px solid ${c.purple}` }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 700 }}>✦ 3 of 4 paid products have no upsell</div>
-                <div style={{ fontSize: 11, color: c.sub }}>AI can generate upsell ideas based on each product. Avg +40% revenue.</div>
-              </div>
-              <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Generate Upsells</AiBtn>
-            </div>
-          </Card>
-          <Card style={{ padding: "14px 18px", borderLeft: `3px solid ${c.blue}` }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 700 }}>✦ Your Checklist captures leads but doesn't sell</div>
-                <div style={{ fontSize: 11, color: c.sub }}>87 leads aren't connected to a paid product. AI can build the funnel.</div>
-              </div>
-              <AiBtn small>Build Funnel</AiBtn>
-            </div>
-          </Card>
-        </div>
+        {/* Single opportunity insight */}
+        <Card style={{ padding: "14px 18px", borderLeft: `3px solid ${c.purple}` }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontSize: 13 }}>✦ <strong>3 of 4 paid products have no upsell.</strong> Creators with upsells earn 40% more on average.</span>
+            <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Generate Upsells</AiBtn>
+          </div>
+        </Card>
       </div>
     );
   };
@@ -411,7 +360,6 @@ const App = () => {
           </div>
           <div style={{ display: "flex", gap: 6 }}>
             <AiBtn strong color={c.purple}>Generate Product</AiBtn>
-            <AiBtn color={c.blue} bg={c.blueLight} border={c.blueBorder}>Help Me Get Started</AiBtn>
           </div>
         </div>
 
@@ -502,7 +450,6 @@ const App = () => {
                   <div style={{ fontSize: 14, fontWeight: 700 }}>Paid Products</div>
                   <Pill bg={c.greenLight} color={c.green} border={c.greenBorder}>{paidLive.length}</Pill>
                 </div>
-                <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Generate a Product</AiBtn>
               </div>
               <TableHeader />
               {paidLive.map((p, i) => <ProductRow key={i} p={p} />)}
@@ -515,19 +462,9 @@ const App = () => {
                   <div style={{ fontSize: 14, fontWeight: 700 }}>Lead Magnets</div>
                   <Pill bg={c.blueLight} color={c.blue} border={c.blueBorder}>{leadMagnets.length}</Pill>
                 </div>
-                <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Generate a Lead Magnet</AiBtn>
               </div>
               <TableHeader />
               {leadMagnets.map((p, i) => <ProductRow key={i} p={p} />)}
-              <Card style={{ padding: "10px 14px", marginTop: 10, background: `linear-gradient(135deg, ${c.blueLight}, ${c.purpleLight})`, border: `1px solid ${c.blueBorder}` }}>
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div>
-                    <div style={{ fontSize: 12, fontWeight: 700 }}>✦ Grow your list faster</div>
-                    <div style={{ fontSize: 11, color: c.sub }}>AI can create a free lead magnet based on your paid products to attract more customers.</div>
-                  </div>
-                  <AiBtn color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Generate Lead Magnet Idea</AiBtn>
-                </div>
-              </Card>
             </Card>
 
             {/* Drafts */}
@@ -553,30 +490,6 @@ const App = () => {
               </div>
             </Card>
 
-            {/* AI helper for newbies — always at bottom */}
-            <Card style={{ padding: "20px 24px", marginTop: 20, background: `linear-gradient(135deg, ${c.purpleLight}, ${c.blueLight})`, border: `1px solid ${c.purpleBorder}` }}>
-              <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 4 }}>✦ Not sure where to start?</div>
-              <div style={{ fontSize: 13, color: c.sub, marginBottom: 16 }}>Tell AI about your business and it'll help you figure out what to sell, how to price it, and how to get your first customers.</div>
-              <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 10 }}>
-                {[
-                  { icon: "💡", title: "Generate product ideas", desc: "AI suggests products based on your skills and audience" },
-                  { icon: "💰", title: "Help me price my product", desc: "AI analyzes your market and recommends pricing" },
-                  { icon: "📝", title: "Write my product for me", desc: "Generate an ebook, guide, or course outline with AI" },
-                  { icon: "🚀", title: "Build my launch plan", desc: "AI creates a step-by-step plan to get your first sales" },
-                ].map((item, i) => (
-                  <div key={i} style={{
-                    padding: "14px", background: "rgba(255,255,255,0.7)", borderRadius: 10,
-                    border: `1px solid ${c.purpleBorder}`, cursor: "pointer", transition: "all 0.15s",
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.background = "#fff"; e.currentTarget.style.transform = "translateY(-1px)"; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.7)"; e.currentTarget.style.transform = "translateY(0)"; }}>
-                    <div style={{ fontSize: 22, marginBottom: 6 }}>{item.icon}</div>
-                    <div style={{ fontSize: 12, fontWeight: 700, marginBottom: 2 }}>✦ {item.title}</div>
-                    <div style={{ fontSize: 10, color: c.sub, lineHeight: 1.4 }}>{item.desc}</div>
-                  </div>
-                ))}
-              </div>
-            </Card>
           </>
         )}
 
@@ -657,10 +570,7 @@ const App = () => {
             <h1 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 2px", letterSpacing: "-0.02em" }}>Pages</h1>
             <p style={{ margin: 0, color: c.sub, fontSize: 13 }}>8 pages · 7 live · samcarttiger.com</p>
           </div>
-          <div style={{ display: "flex", gap: 6 }}>
-            <AiBtn strong color={c.purple}>Generate Page</AiBtn>
-            <AiBtn>Redesign a Page</AiBtn>
-          </div>
+          <AiBtn strong color={c.purple}>Generate Page</AiBtn>
         </div>
 
         <TabBar tabs={[
@@ -737,16 +647,6 @@ const App = () => {
               </Card>
             </div>
 
-            {/* Newbie helper */}
-            <Card style={{ padding: "16px 20px", background: `linear-gradient(135deg, ${c.purpleLight}88, ${c.blueLight}88)`, border: `1px solid ${c.purpleBorder}` }}>
-              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>✦ Page Building Help</div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <AiBtn small color={c.purple} bg="rgba(255,255,255,0.7)" border={c.purpleBorder}>Generate a Checkout Page</AiBtn>
-                <AiBtn small color={c.purple} bg="rgba(255,255,255,0.7)" border={c.purpleBorder}>Generate a Landing Page</AiBtn>
-                <AiBtn small color={c.purple} bg="rgba(255,255,255,0.7)" border={c.purpleBorder}>Generate a Lead Capture</AiBtn>
-                <AiBtn small color={c.purple} bg="rgba(255,255,255,0.7)" border={c.purpleBorder}>Write Page Copy for Me</AiBtn>
-              </div>
-            </Card>
           </>
         )}
       </div>
@@ -936,11 +836,8 @@ const App = () => {
                 {/* Ideas and Experiments */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16 }}>
                   <Card style={{ padding: "18px 20px" }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 12 }}>
-                      <div style={{ fontSize: 13, fontWeight: 700 }}>✦ AI Content Ideas</div>
-                      <AiBtn small>Regenerate</AiBtn>
-                    </div>
-                    <div style={{ fontSize: 11, color: c.muted, marginBottom: 12 }}>Based on your best-performing content, audience behavior, and trending topics</div>
+                    <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>✦ Content Ideas</div>
+                    <div style={{ fontSize: 11, color: c.muted, marginBottom: 12 }}>Based on your best-performing content and audience behavior</div>
                     {[
                       { idea: "Behind-the-scenes: Creating the Creator Playbook", reason: "Your process content gets 2× more clicks", platform: "Instagram Reel", confidence: "High" },
                       { idea: "Poll: What's your biggest challenge as a creator?", reason: "Engagement posts drive 3× more profile visits", platform: "Twitter/X", confidence: "High" },
@@ -958,9 +855,8 @@ const App = () => {
                             <Pill bg={item.confidence === "High" ? c.greenLight : c.amberLight} color={item.confidence === "High" ? c.green : c.amber} border={item.confidence === "High" ? c.greenBorder : c.amberBorder}>{item.confidence}</Pill>
                           </div>
                         </div>
-                        <div style={{ marginTop: 6, display: "flex", gap: 4 }}>
-                          <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Draft with AI</AiBtn>
-                          <AiBtn small>Generate Variations</AiBtn>
+                        <div style={{ marginTop: 6 }}>
+                          <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Draft This</AiBtn>
                         </div>
                       </div>
                     ))}
@@ -1037,8 +933,7 @@ const App = () => {
                 <div style={{ fontSize: 12, color: c.sub }}>1 running · 3 completed · 3 suggested</div>
               </div>
               <div style={{ display: "flex", gap: 6 }}>
-                <AiBtn strong color={c.purple}>Suggest Experiments</AiBtn>
-                <AiBtn>Create Experiment</AiBtn>
+                <AiBtn strong color={c.purple}>Create Experiment</AiBtn>
               </div>
             </div>
 
@@ -1181,10 +1076,6 @@ const App = () => {
             <h1 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 2px", letterSpacing: "-0.02em" }}>Sales</h1>
             <p style={{ margin: 0, color: c.sub, fontSize: 13 }}>Revenue, orders, and customer insights · Last 30 days</p>
           </div>
-          <div style={{ display: "flex", gap: 6 }}>
-            <AiBtn strong color={c.purple}>Analyze My Sales</AiBtn>
-            <AiBtn>Revenue Forecast</AiBtn>
-          </div>
         </div>
 
         <TabBar tabs={[
@@ -1202,21 +1093,6 @@ const App = () => {
               <Card style={{ padding: "16px 18px" }}><Metric label="Avg Order Value" value="$40.35" change="+8%" large sub="$33.50 without upsells" /></Card>
               <Card style={{ padding: "16px 18px" }}><Metric label="Refund Rate" value="1.5%" change="-0.3%" large sub="2 refunds this period" /></Card>
             </div>
-
-            {/* AI Insight Banner */}
-            <Card style={{ padding: "14px 18px", marginBottom: 16, background: `linear-gradient(135deg, ${c.purpleLight}, ${c.blueLight})`, border: `1px solid ${c.purpleBorder}` }}>
-              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-                <div style={{ width: 28, height: 28, borderRadius: 8, background: `linear-gradient(135deg, ${c.purple}, ${c.blue})`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 14, flexShrink: 0 }}>✦</div>
-                <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: 13, fontWeight: 700 }}>AI Sales Insight</div>
-                  <div style={{ fontSize: 12, color: c.sub }}>Your revenue is up 23% but 82% comes from one product (Playbook). Diversifying with a mid-tier product ($49–$59) could reduce risk and grow revenue 30%+.</div>
-                </div>
-                <div style={{ display: "flex", gap: 6 }}>
-                  <AiBtn small color={c.purple} bg="rgba(255,255,255,0.7)" border={c.purpleBorder}>Generate Product Idea</AiBtn>
-                  <AiBtn small color={c.purple} bg="rgba(255,255,255,0.7)" border={c.purpleBorder}>Show Full Analysis</AiBtn>
-                </div>
-              </div>
-            </Card>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
               <Card style={{ padding: "18px 20px" }}>
