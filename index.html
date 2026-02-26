@@ -130,13 +130,13 @@ const App = () => {
           <div key={i} onClick={() => setActiveBiz(i)} style={{
             display: "flex", alignItems: "center", gap: 6, padding: "7px 16px",
             borderRadius: "8px 8px 0 0", cursor: "pointer", marginBottom: -1,
-            background: i === activeBiz ? c.card : "transparent",
+            background: i === activeBiz ? c.card : "#F8F9FA",
             border: i === activeBiz ? `1px solid ${c.border}` : "1px solid transparent",
             borderBottom: i === activeBiz ? `1px solid ${c.card}` : "1px solid transparent",
             transition: "all 0.15s",
           }}
-          onMouseEnter={e => { if (i !== activeBiz) e.currentTarget.style.background = c.bg; }}
-          onMouseLeave={e => { if (i !== activeBiz) e.currentTarget.style.background = "transparent"; }}>
+          onMouseEnter={e => { if (i !== activeBiz) e.currentTarget.style.background = "#ECEEF1"; }}
+          onMouseLeave={e => { if (i !== activeBiz) e.currentTarget.style.background = "#F8F9FA"; }}>
             <div style={{ width: 18, height: 18, borderRadius: 4, background: b.color, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 9, fontWeight: 800, flexShrink: 0 }}>{b.icon}</div>
             <span style={{ fontSize: 12, fontWeight: i === activeBiz ? 700 : 500, color: i === activeBiz ? c.text : c.sub, whiteSpace: "nowrap" }}>{b.name}</span>
           </div>
@@ -145,7 +145,7 @@ const App = () => {
         <button style={{
           display: "flex", alignItems: "center", gap: 4, padding: "0 10px",
           border: `1px dashed ${c.purpleBorder}`, borderRadius: 6, background: "transparent",
-          cursor: "pointer", marginLeft: 8, marginBottom: 7, height: 22,
+          cursor: "pointer", marginLeft: 8, marginBottom: 6, height: 22,
         }}
         onMouseEnter={e => e.currentTarget.style.background = c.purpleLight}
         onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
