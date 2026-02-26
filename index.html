@@ -3,9 +3,22 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SamCart — Navigation Prototype</title>
+  <title>SamCart — Full Prototype</title>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&amp;display=swap" rel="stylesheet" />
-  <style>* { margin: 0; padding: 0; box-sizing: border-box; } body { font-family: 'DM Sans', -apple-system, sans-serif; } button { font-family: inherit; } input { font-family: inherit; } ::-webkit-scrollbar { height: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }</style>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'DM Sans', -apple-system, sans-serif; }
+    button { font-family: inherit; cursor: pointer; }
+    input, textarea { font-family: inherit; }
+    ::-webkit-scrollbar { height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }
+    @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+    .track { display: flex; gap: 20px; transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1); }
+    .el { transition: opacity 0.6s ease, transform 0.6s ease; }
+    .shimmer { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%); background-size: 200% 100%; animation: shimmer 2.5s infinite; pointer-events: none; }
+  </style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.9/babel.min.js"></script>
@@ -13,13 +26,16 @@
 <body>
   <div id="root"></div>
   <script type="text/babel">
-    const { useState } = React;
+    const { useState, useEffect, useRef } = React;
 
+// ════════════════════════════════════════════
+// DASHBOARD COMPONENT
+// ════════════════════════════════════════════
 // ════════════════════════════════════════════
 // SAMCART — Section Landing Pages Mockup
 // ════════════════════════════════════════════
 
-const App = () => {
+const Dashboard = () => {
   const [currentPage, setCurrentPage] = useState("home");
   const [expandedProduct, setExpandedProduct] = useState("playbook");
   const [productView, setProductView] = useState("performance");
@@ -1423,8 +1439,368 @@ const App = () => {
   );
 };
 
+// ════════════════════════════════════════════
+// ONBOARDING COMPONENT
+// ════════════════════════════════════════════
 
-    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+const oc = {
+  bg: "#F5F6F8", card: "#FFFFFF", text: "#171A1F", sub: "#5F6B7A", muted: "#9BA4B0",
+  border: "#E2E5EA", blue: "#2563EB", blueLight: "#EEF4FF", blueBorder: "#BDD4FE",
+  green: "#0D9668", greenLight: "#EDFCF5", greenBorder: "#A3F0CD",
+  amber: "#CF8A06", amberLight: "#FFF9E6", amberBorder: "#F5D880",
+  purple: "#7534ED", purpleLight: "#F3EFFE", purpleBorder: "#CFBCFE",
+  rose: "#DC2452", roseLight: "#FFF0F3", roseBorder: "#FDBED0",
+};
+
+const oGenTasks = [
+  { label: "Analyzing your idea", icon: "🧠", detail: "Understanding your market and audience..." },
+  { label: "Writing your ebook", icon: "📝", detail: "Crafting chapters, headlines, and content..." },
+  { label: "Designing your brand", icon: "🎨", detail: "Applying colors, fonts, and visual identity..." },
+  { label: "Building landing page", icon: "🖥️", detail: "Creating a high-converting sales page..." },
+  { label: "Setting up checkout", icon: "💳", detail: "Configuring payments and delivery..." },
+  { label: "Generating email sequence", icon: "📧", detail: "Writing your 5-part launch sequence..." },
+  { label: "Creating social posts", icon: "📱", detail: "Drafting launch content for 3 platforms..." },
+  { label: "Final polish", icon: "✨", detail: "Optimizing everything for launch..." },
+];
+
+const OPill = ({ bg, color, border, children }) => (
+  <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 9px", borderRadius: 100, fontSize: 10, fontWeight: 700, background: bg, color, border: `1px solid ${border}`, whiteSpace: "nowrap" }}>{children}</span>
+);
+const Onboarding = ({ onComplete }) => {
+  const [step, setStep] = useState("welcome");
+  const [idea, setIdea] = useState("I want to sell an online course about watercolor painting for beginners. I'd price it around $49 and include video lessons, practice templates, and a community.");
+  const [genProgress, setGenProgress] = useState(0);
+  const [activeGen, setActiveGen] = useState(0);
+  const [readyReveal, setReadyReveal] = useState(false);
+
+  const pc = "#7534ED";
+  const sc = "#2563EB";
+  const progressRef = useRef(0);
+  const trackRef = useRef(null);
+  const dotRefs = useRef([]);
+  const carouselPos = useRef(0);
+
+  // Progress simulation — updates DOM directly for reveals, React state throttled
+  useEffect(() => {
+    if (step !== "generating") return;
+    const interval = setInterval(() => {
+      progressRef.current += 0.5;
+      const p = progressRef.current;
+      if (p >= 100) {
+        clearInterval(interval);
+        setGenProgress(100);
+        setActiveGen(oGenTasks.length - 1);
+        setTimeout(() => setStep("ready"), 600);
+        return;
+      }
+      // Direct DOM updates for reveal elements (no React re-render)
+      document.querySelectorAll("[data-reveal]").forEach(el => {
+        const threshold = parseFloat(el.getAttribute("data-reveal"));
+        if (p > threshold) {
+          el.style.opacity = "1";
+          el.style.transform = "translateY(0)";
+        }
+      });
+      // Throttled React state update every 2%
+      if (Math.floor(p * 10) % 20 === 0) {
+        setGenProgress(p);
+        setActiveGen(Math.min(Math.floor((p / 100) * oGenTasks.length), oGenTasks.length - 1));
+      }
+    }, 80);
+    return () => clearInterval(interval);
+  }, [step]);
+
+  // Carousel auto-rotate — pure DOM, no React
+  useEffect(() => {
+    if (step !== "generating") return;
+    const swap = (pos) => {
+      if (trackRef.current) trackRef.current.style.transform = pos === 0 ? "translateX(0)" : "translateX(-440px)";
+      if (dotRefs.current[0]) { dotRefs.current[0].style.width = pos === 0 ? "24px" : "8px"; dotRefs.current[0].style.background = pos === 0 ? oc.purple : oc.border; }
+      if (dotRefs.current[1]) { dotRefs.current[1].style.width = pos === 1 ? "24px" : "8px"; dotRefs.current[1].style.background = pos === 1 ? oc.purple : oc.border; }
+    };
+    const interval = setInterval(() => {
+      carouselPos.current = carouselPos.current === 0 ? 1 : 0;
+      swap(carouselPos.current);
+    }, 4000);
+    return () => clearInterval(interval);
+  }, [step]);
+
+  useEffect(() => {
+    if (step === "ready") setTimeout(() => setReadyReveal(true), 300);
+  }, [step]);
+
+  const startGeneration = () => { progressRef.current = 0; carouselPos.current = 0; setGenProgress(0); setActiveGen(0); setStep("generating"); };
+
+  return (
+    <div>
+      {/* ═══════ WELCOME ═══════ */}
+      <div style={{ display: step === "welcome" ? "flex" : "none", minHeight: "100vh", background: oc.bg, alignItems: "center", justifyContent: "center" }}>
+        <div style={{ width: 600, animation: "fadeUp 0.5s ease-out" }}>
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg, ${oc.purple}, ${oc.blue})`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 18, fontWeight: 800 }}>✦</div>
+              <span style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.02em" }}>SamCart</span>
+            </div>
+          </div>
+          <div style={{ background: oc.card, borderRadius: 12, border: `1px solid ${oc.border}`, padding: "40px 44px" }}>
+            <h1 style={{ fontSize: 28, fontWeight: 800, textAlign: "center", marginBottom: 8, letterSpacing: "-0.02em" }}>Describe your business idea</h1>
+            <p style={{ fontSize: 14, color: oc.sub, textAlign: "center", marginBottom: 28, lineHeight: 1.5 }}>Tell us what you want to sell. Be as detailed as you can — AI will build your entire business from this.</p>
+            <textarea value={idea} onChange={e => setIdea(e.target.value)} style={{ width: "100%", height: 140, border: `1px solid ${oc.border}`, borderRadius: 10, padding: "14px 16px", fontSize: 14, lineHeight: 1.6, resize: "none", outline: "none", color: oc.text, background: oc.bg }} />
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, margin: "20px 0" }}>
+              <div style={{ height: 1, flex: 1, background: oc.border }} /><span style={{ fontSize: 12, color: oc.muted, fontWeight: 600 }}>or</span><div style={{ height: 1, flex: 1, background: oc.border }} />
+            </div>
+            <div style={{ border: `2px dashed ${oc.border}`, borderRadius: 10, padding: 20, textAlign: "center" }}>
+              <div style={{ fontSize: 24, marginBottom: 6 }}>📄</div>
+              <div style={{ fontSize: 13, fontWeight: 600 }}>Upload your own digital product</div>
+              <div style={{ fontSize: 12, color: oc.muted }}>PDF, ebook, doc, or course outline</div>
+            </div>
+            <button onClick={() => setStep("brand")} style={{ width: "100%", marginTop: 24, padding: 14, borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${oc.purple}, ${oc.blue})`, color: "#fff", fontSize: 15, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>✦ Continue</button>
+          </div>
+        </div>
+      </div>
+
+      {/* ═══════ BRAND ═══════ */}
+      <div style={{ display: step === "brand" ? "flex" : "none", minHeight: "100vh", background: oc.bg }}>
+        <div style={{ flex: 1, padding: "40px 48px", maxWidth: 520 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 32 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 7, background: `linear-gradient(135deg, ${oc.purple}, ${oc.blue})`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 14 }}>✦</div>
+            <span style={{ fontSize: 16, fontWeight: 800 }}>SamCart</span>
+          </div>
+          <h2 style={{ fontSize: 24, fontWeight: 800, marginBottom: 4 }}>Build your brand</h2>
+          <p style={{ fontSize: 13, color: oc.sub, marginBottom: 28 }}>Customize while we generate your business</p>
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: oc.muted, marginBottom: 8 }}>Your Logo</div>
+            <div style={{ display: "flex", gap: 10 }}>
+              <div style={{ width: 64, height: 64, borderRadius: 10, border: `2px dashed ${oc.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 24, color: oc.muted }}>+</div>
+              <div style={{ width: 64, height: 64, borderRadius: 10, border: `2px dashed ${oc.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, color: oc.muted, textAlign: "center" }}>Dark<br/>version</div>
+            </div>
+          </div>
+          <div style={{ marginBottom: 24 }}>
+            <div style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: oc.muted, marginBottom: 8 }}>Pick Your Colors</div>
+            <div style={{ display: "flex", gap: 10 }}>
+              {[{c:pc,l:"Primary"},{c:sc,l:"Secondary"},{c:"#0D9668",l:"Accent"}].map((col,i) => (
+                <div key={i} style={{ textAlign: "center" }}>
+                  <div style={{ width: 48, height: 48, borderRadius: 10, background: col.c, border: "3px solid #fff", boxShadow: `0 0 0 1px ${oc.border}` }} />
+                  <div style={{ fontSize: 10, color: oc.sub, marginTop: 4, fontWeight: 600 }}>{col.l}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <button onClick={startGeneration} style={{ width: "100%", padding: 14, borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${oc.purple}, ${oc.blue})`, color: "#fff", fontSize: 15, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>✦ Generate My Business</button>
+        </div>
+        <div style={{ flex: 1, background: `linear-gradient(135deg, ${oc.purpleLight}, ${oc.blueLight})`, padding: 40, display: "flex", alignItems: "center", justifyContent: "center", borderLeft: `1px solid ${oc.border}` }}>
+          <div style={{ fontSize: 14, color: oc.sub }}>Preview will appear here</div>
+        </div>
+      </div>
+
+      {/* ═══════ GENERATING ═══════ */}
+      <div style={{ display: step === "generating" ? "flex" : "none", minHeight: "100vh", background: oc.bg, flexDirection: "column", alignItems: "center", justifyContent: "center", overflow: "hidden" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 32 }}>
+          <div style={{ width: 28, height: 28, borderRadius: 7, background: `linear-gradient(135deg, ${oc.purple}, ${oc.blue})`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 14 }}>✦</div>
+          <span style={{ fontSize: 16, fontWeight: 800 }}>SamCart</span>
+        </div>
+
+        <div style={{ width: 420, overflow: "hidden", marginBottom: 12 }}>
+          <div ref={trackRef} className="track" style={{ transform: "translateX(0)" }}>
+
+            {/* EBOOK CARD */}
+            <div style={{ width: 420, flexShrink: 0 }}>
+              <div style={{ background: oc.card, borderRadius: 12, border: `1px solid ${oc.border}`, overflow: "hidden", boxShadow: "0 12px 40px rgba(0,0,0,0.1)" }}>
+                <div style={{ padding: "8px 12px", background: "#2C2C2E", display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ display: "flex", gap: 5 }}>
+                    <div style={{ width: 9, height: 9, borderRadius: "50%", background: "#FF5F57" }} />
+                    <div style={{ width: 9, height: 9, borderRadius: "50%", background: "#FFBD2E" }} />
+                    <div style={{ width: 9, height: 9, borderRadius: "50%", background: "#28CA42" }} />
+                  </div>
+                  <span style={{ fontSize: 12, marginLeft: 8 }}>📄</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: "#E5E5EA" }}>watercolor-course.pdf</span>
+                  <span style={{ marginLeft: "auto", fontSize: 10, fontWeight: 700, color: "#A78BFA" }}>Writing...</span>
+                </div>
+                <div style={{ padding: "24px 28px", minHeight: 370, background: "#FAFAFA", position: "relative" }}>
+                  <div className="el" data-reveal="2" style={{ opacity: 0, transform: "translateY(6px)", textAlign: "center", marginBottom: 20 }}>
+                    <div style={{ width: "65%", height: 16, background: pc + "30", borderRadius: 4, margin: "0 auto 6px" }} />
+                    <div style={{ width: "40%", height: 10, background: pc + "15", borderRadius: 4, margin: "0 auto" }} />
+                  </div>
+                  <div className="el" data-reveal="8" style={{ opacity: 0, transform: "translateY(6px)", width: "100%", height: 1, background: oc.border, marginBottom: 16 }} />
+                  <div className="el" data-reveal="10" style={{ opacity: 0, transform: "translateY(6px)", width: "50%", height: 11, background: pc + "25", borderRadius: 3, marginBottom: 10 }} />
+                  <div className="el" data-reveal="14" style={{ opacity: 0, transform: "translateY(6px)", marginBottom: 14 }}>
+                    {[94,88,96,78,92,65,88].map((w,i) => <div key={i} style={{ width: `${w}%`, height: 7, background: oc.border, borderRadius: 3, marginBottom: 5 }} />)}
+                  </div>
+                  <div className="el" data-reveal="24" style={{ opacity: 0, transform: "translateY(6px)", width: "100%", height: 90, background: `linear-gradient(135deg, ${pc}08, ${sc}08)`, borderRadius: 6, border: `1px solid ${oc.border}`, marginBottom: 14, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <span style={{ fontSize: 11, color: oc.muted }}>[ illustration ]</span>
+                  </div>
+                  <div className="el" data-reveal="32" style={{ opacity: 0, transform: "translateY(6px)", width: "45%", height: 11, background: pc + "25", borderRadius: 3, marginBottom: 10 }} />
+                  <div className="el" data-reveal="36" style={{ opacity: 0, transform: "translateY(6px)" }}>
+                    {[90,85,92,70,88].map((w,i) => <div key={i} style={{ width: `${w}%`, height: 7, background: oc.border, borderRadius: 3, marginBottom: 5 }} />)}
+                  </div>
+                  <div className="shimmer" />
+                </div>
+              </div>
+            </div>
+
+            {/* LANDING PAGE CARD */}
+            <div style={{ width: 420, flexShrink: 0 }}>
+              <div style={{ background: oc.card, borderRadius: 12, border: `1px solid ${oc.border}`, overflow: "hidden", boxShadow: "0 12px 40px rgba(0,0,0,0.1)" }}>
+                <div style={{ padding: "8px 12px", background: "#F0F1F3", borderBottom: `1px solid ${oc.border}`, display: "flex", alignItems: "center", gap: 6 }}>
+                  <div style={{ display: "flex", gap: 5 }}>
+                    <div style={{ width: 9, height: 9, borderRadius: "50%", background: "#FF5F57" }} />
+                    <div style={{ width: 9, height: 9, borderRadius: "50%", background: "#FFBD2E" }} />
+                    <div style={{ width: 9, height: 9, borderRadius: "50%", background: "#28CA42" }} />
+                  </div>
+                  <div style={{ flex: 1, background: oc.card, borderRadius: 5, padding: "4px 10px", fontSize: 10, color: oc.muted, marginLeft: 4, display: "flex", alignItems: "center", gap: 4 }}>
+                    <span style={{ fontSize: 8, color: oc.green }}>🔒</span> yoursite.samcart.com
+                  </div>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: oc.purple }}>Designing...</span>
+                </div>
+                <div style={{ padding: "20px 18px", minHeight: 370, background: "#fff", position: "relative" }}>
+                  <div className="el" data-reveal="2" style={{ opacity: 0, transform: "translateY(6px)", display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+                    <div style={{ width: 70, height: 10, background: pc + "35", borderRadius: 4 }} />
+                    <div style={{ display: "flex", gap: 8 }}>{[40,50,35].map((w,i) => <div key={i} style={{ width: w, height: 7, background: oc.border, borderRadius: 3 }} />)}</div>
+                  </div>
+                  <div className="el" data-reveal="8" style={{ opacity: 0, transform: "translateY(6px)" }}>
+                    <div style={{ width: "85%", height: 16, background: pc + "30", borderRadius: 4, marginBottom: 6 }} />
+                    <div style={{ width: "60%", height: 16, background: pc + "20", borderRadius: 4, marginBottom: 4 }} />
+                  </div>
+                  <div className="el" data-reveal="14" style={{ opacity: 0, transform: "translateY(6px)", marginBottom: 14 }}>
+                    <div style={{ width: "90%", height: 8, background: oc.border, borderRadius: 3, marginBottom: 4 }} />
+                    <div style={{ width: "70%", height: 8, background: oc.border, borderRadius: 3 }} />
+                  </div>
+                  <div className="el" data-reveal="18" style={{ opacity: 0, transform: "translateY(6px)", display: "flex", gap: 8, marginBottom: 18 }}>
+                    <div style={{ height: 30, width: 110, background: pc, borderRadius: 6 }} />
+                    <div style={{ height: 30, width: 90, borderRadius: 6, border: `2px solid ${pc}40` }} />
+                  </div>
+                  <div className="el" data-reveal="24" style={{ opacity: 0, transform: "translateY(6px)", width: "100%", height: 80, borderRadius: 8, background: `linear-gradient(135deg, ${pc}10, ${sc}10)`, marginBottom: 16, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div className="el" data-reveal="28" style={{ opacity: 0, width: 40, height: 40, borderRadius: 8, background: pc + "20" }} />
+                  </div>
+                  <div className="el" data-reveal="32" style={{ opacity: 0, transform: "translateY(6px)", display: "flex", gap: 6, alignItems: "center", marginBottom: 14 }}>
+                    <div style={{ display: "flex" }}>{[pc,sc,oc.amber].map((col,i) => <div key={i} style={{ width: 18, height: 18, borderRadius: "50%", background: col + "40", border: "2px solid #fff", marginLeft: i > 0 ? -5 : 0 }} />)}</div>
+                    <div style={{ width: 90, height: 7, background: oc.border, borderRadius: 3 }} />
+                  </div>
+                  <div className="el" data-reveal="38" style={{ opacity: 0, transform: "translateY(6px)", display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 6, marginBottom: 14 }}>
+                    {[0,1,2].map(i => (
+                      <div key={i} style={{ padding: 8, background: oc.bg, borderRadius: 6, border: `1px solid ${oc.border}` }}>
+                        <div style={{ width: 20, height: 20, borderRadius: 5, background: pc + "18", marginBottom: 5 }} />
+                        <div style={{ width: "80%", height: 6, background: oc.border, borderRadius: 3, marginBottom: 3 }} />
+                        <div style={{ width: "55%", height: 5, background: oc.border + "80", borderRadius: 3 }} />
+                      </div>
+                    ))}
+                  </div>
+                  <div className="el" data-reveal="48" style={{ opacity: 0, transform: "translateY(6px)", height: 34, background: pc, borderRadius: 8, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div style={{ width: 80, height: 8, background: "#ffffff60", borderRadius: 3 }} />
+                  </div>
+                  <div className="shimmer" />
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div style={{ display: "flex", justifyContent: "center", gap: 6, marginBottom: 32 }}>
+          <div ref={el => dotRefs.current[0] = el} style={{ height: 6, borderRadius: 3, width: 24, background: oc.purple, transition: "all 0.3s", cursor: "pointer" }} />
+          <div ref={el => dotRefs.current[1] = el} style={{ height: 6, borderRadius: 3, width: 8, background: oc.border, transition: "all 0.3s", cursor: "pointer" }} />
+        </div>
+
+        <div style={{ width: 460, textAlign: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 6 }}>
+            <span style={{ fontSize: 18 }}>{(oGenTasks[activeGen] || oGenTasks[0]).icon}</span>
+            <span style={{ fontSize: 15, fontWeight: 700 }}>{(oGenTasks[activeGen] || oGenTasks[0]).label}</span>
+          </div>
+          <div style={{ fontSize: 12, color: oc.sub, marginBottom: 14 }}>{(oGenTasks[activeGen] || oGenTasks[0]).detail}</div>
+          <div style={{ height: 8, background: oc.border, borderRadius: 4, overflow: "hidden", marginBottom: 8 }}>
+            <div style={{ height: "100%", borderRadius: 4, background: `linear-gradient(90deg, ${oc.purple}, ${oc.blue})`, width: `${genProgress}%`, transition: "width 0.3s" }} />
+          </div>
+          <div style={{ fontSize: 12, color: oc.muted, marginBottom: 16 }}>{Math.round(genProgress)}% complete</div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 5, justifyContent: "center" }}>
+            {oGenTasks.map((t, i) => (
+              <span key={i} style={{ fontSize: 10, fontWeight: 600, padding: "3px 10px", borderRadius: 100, background: i < activeGen ? oc.greenLight : i === activeGen ? oc.purpleLight : oc.bg, color: i < activeGen ? oc.green : i === activeGen ? oc.purple : oc.muted, border: `1px solid ${i < activeGen ? oc.greenBorder : i === activeGen ? oc.purpleBorder : oc.border}`, transition: "all 0.3s" }}>
+                {i < activeGen ? "✓ " : ""}{t.label}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ═══════ READY ═══════ */}
+      <div style={{ display: step === "ready" ? "block" : "none", minHeight: "100vh", background: oc.bg }}>
+        <div style={{ background: `linear-gradient(135deg, ${oc.purple}10, ${oc.blue}10)`, borderBottom: `1px solid ${oc.border}`, padding: "32px 40px", textAlign: "center" }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 8, marginBottom: 12 }}>
+            <div style={{ width: 28, height: 28, borderRadius: 7, background: `linear-gradient(135deg, ${oc.purple}, ${oc.blue})`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 14 }}>✦</div>
+            <span style={{ fontSize: 16, fontWeight: 800 }}>SamCart</span>
+          </div>
+          <h1 style={{ fontSize: 32, fontWeight: 800, letterSpacing: "-0.02em", marginBottom: 6 }}>Your new business is ready!</h1>
+          <p style={{ fontSize: 14, color: oc.sub }}>We generated everything you need. Review and customize below.</p>
+        </div>
+        <div style={{ maxWidth: 900, margin: "0 auto", padding: "28px 32px" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 20, opacity: readyReveal ? 1 : 0, transform: readyReveal ? "translateY(0)" : "translateY(20px)", transition: "all 0.5s" }}>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: oc.muted, marginBottom: 8 }}>Landing Pages</div>
+              {[{n:"Landing Page",u:"yoursite.samcart.com",i:"🖥️"},{n:"Link in Bio",u:"yoursite.samcart.com/bio",i:"🔗"}].map((pg,idx) => (
+                <div key={idx} style={{ background: oc.card, borderRadius: 12, border: `1px solid ${oc.border}`, padding: "16px 18px", marginBottom: 10 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <span style={{ fontSize: 24 }}>{pg.i}</span>
+                    <div style={{ flex: 1 }}><div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{pg.n}</div><div style={{ fontSize: 11, color: oc.muted }}>{pg.u}</div></div>
+                    <OPill bg={oc.greenLight} color={oc.green} border={oc.greenBorder}>Live</OPill>
+                  </div>
+                </div>
+              ))}
+              <div style={{ display: "flex", gap: 6, marginTop: 6 }}>
+                <button style={{ padding: "7px 14px", borderRadius: 8, border: `1px dashed ${oc.purpleBorder}`, background: "transparent", color: oc.purple, fontSize: 12, fontWeight: 600 }}>✦ + New Page</button>
+                <button style={{ padding: "7px 14px", borderRadius: 8, border: `1px solid ${oc.border}`, background: oc.card, color: oc.sub, fontSize: 12, fontWeight: 600 }}>A/B Test Pages</button>
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 12, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: oc.muted, marginBottom: 8 }}>Products</div>
+              {[{n:"Entry Package",p:"$29",t:"Starter"},{n:"Complete Box",p:"$79",t:"Premium"}].map((pr,idx) => (
+                <div key={idx} style={{ background: oc.card, borderRadius: 12, border: `1px solid ${oc.border}`, padding: "16px 18px", marginBottom: 10 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 8, background: `linear-gradient(135deg, ${oc.purple}20, ${oc.blue}20)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16, fontWeight: 800, color: oc.purple }}>$</div>
+                    <div style={{ flex: 1 }}><div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>{pr.n}</div><div style={{ display: "flex", gap: 4, alignItems: "center" }}><OPill bg={oc.blueLight} color={oc.blue} border={oc.blueBorder}>{pr.t}</OPill><span style={{ fontSize: 13, fontWeight: 700 }}>{pr.p}</span></div></div>
+                    <button style={{ padding: "4px 10px", borderRadius: 6, background: oc.purpleLight, color: oc.purple, border: `1px solid ${oc.purpleBorder}`, fontSize: 10, fontWeight: 600 }}>✦ A/B Test</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ background: oc.card, borderRadius: 12, border: `1px solid ${oc.border}`, padding: "20px 24px", marginTop: 20, opacity: readyReveal ? 1 : 0, transition: "opacity 0.5s 0.2s" }}>
+            <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>✦ Everything we generated</div>
+            <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+              {[{l:"2 Products",i:"📦"},{l:"2 Landing Pages",i:"🖥️"},{l:"1 Checkout Flow",i:"💳"},{l:"5-Part Email Sequence",i:"📧"},{l:"9 Social Posts",i:"📱"},{l:"Brand Kit",i:"🎨"}].map((item,i) => (
+                <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 14px", background: oc.bg, borderRadius: 8, border: `1px solid ${oc.border}` }}>
+                  <span style={{ fontSize: 16 }}>{item.i}</span><span style={{ fontSize: 12, fontWeight: 600 }}>{item.l}</span><span style={{ fontSize: 10, color: oc.green }}>✓</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ textAlign: "center", marginTop: 28, opacity: readyReveal ? 1 : 0, transition: "opacity 0.5s 0.4s" }}>
+            <button onClick={onComplete} style={{ padding: "14px 40px", borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${oc.purple}, ${oc.blue})`, color: "#fff", fontSize: 15, fontWeight: 700, boxShadow: `0 4px 16px ${oc.purple}40` }}>✦ Go to Dashboard</button>
+            <p style={{ fontSize: 12, color: oc.muted, marginTop: 8 }}>You can edit everything from your dashboard</p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  );
+};
+
+// ════════════════════════════════════════════
+// ROOT — switches between onboarding and dashboard
+// ════════════════════════════════════════════
+const Root = () => {
+  const [mode, setMode] = useState("onboarding");
+  return (
+    <div>
+      <div style={{ display: mode === "onboarding" ? "block" : "none" }}>
+        <Onboarding onComplete={() => setMode("dashboard")} />
+      </div>
+      <div style={{ display: mode === "dashboard" ? "block" : "none" }}>
+        <Dashboard />
+      </div>
+    </div>
+  );
+};
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<Root />);
   </script>
 </body>
 </html>
