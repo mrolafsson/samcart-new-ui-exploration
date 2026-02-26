@@ -37,13 +37,14 @@
 // SAMCART — Section Landing Pages Mockup
 // ════════════════════════════════════════════
 
-const Dashboard = ({ onNewBusiness }) => {
+const Dashboard = ({ onNewBusiness, isNew }) => {
   const [currentPage, setCurrentPage] = useState("home");
   const [expandedProduct, setExpandedProduct] = useState("playbook");
   const [productView, setProductView] = useState("performance");
   const [growthTab, setGrowthTab] = useState("overview");
   const [salesTab, setSalesTab] = useState("overview");
   const [pagesTab, setPagesTab] = useState("overview");
+  const [dashMode, setDashMode] = useState(isNew ? "launch" : "growth");
 
   // ─── Colors ───
   const c = {
@@ -200,6 +201,14 @@ const Dashboard = ({ onNewBusiness }) => {
             <input placeholder="Search..." style={{ border: "none", background: "transparent", fontSize: 11, outline: "none", color: c.text, width: 120 }} />
           </div>
           <div style={{ width: 22, height: 22, borderRadius: "50%", background: c.blueLight, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 800, color: c.blue, cursor: "pointer" }}>JD</div>
+          {/* Demo mode toggle */}
+          <div onClick={() => setDashMode(dashMode === "launch" ? "growth" : "launch")} style={{
+            display: "flex", alignItems: "center", gap: 4, padding: "3px 8px", borderRadius: 100, cursor: "pointer",
+            background: dashMode === "launch" ? c.purpleLight : c.greenLight,
+            border: `1px solid ${dashMode === "launch" ? c.purpleBorder : c.greenBorder}`,
+          }}>
+            <span style={{ fontSize: 9, fontWeight: 700, color: dashMode === "launch" ? c.purple : c.green }}>{dashMode === "launch" ? "🚀 Launch" : "📈 Growth"}</span>
+          </div>
         </div>
       </div>
 
@@ -252,7 +261,209 @@ const Dashboard = ({ onNewBusiness }) => {
   };
 
   // ════════════════════════════════════════════
-  //  HOME DASHBOARD
+  //  LAUNCH MODE HOME — living workspace
+  // ════════════════════════════════════════════
+  const LaunchHomePage = () => {
+    const [trafficSlider, setTrafficSlider] = useState(100);
+    const [aiPulse, setAiPulse] = useState(0);
+    const [enhanced, setEnhanced] = useState({});
+
+    useEffect(() => {
+      const t = setInterval(() => setAiPulse(p => (p + 1) % 3), 3500);
+      return () => clearInterval(t);
+    }, []);
+
+    const aiTicker = [
+      "Analyzing competitor pricing for your niche...",
+      "Testing email subject line variants...",
+      "Optimizing checkout for mobile...",
+    ];
+
+    const doEnhance = (key) => setEnhanced(prev => ({ ...prev, [key]: true }));
+    const dailyRev = Math.round(trafficSlider * 0.03 * 49);
+
+    const EnhanceBtn = ({ k, label, color = c.purple, bg = c.purpleLight, border = c.purpleBorder, doneLabel }) => (
+      <button onClick={e => { e.stopPropagation(); doEnhance(k); }} style={{
+        padding: "3px 8px", borderRadius: 100, fontSize: 10, fontWeight: 600, cursor: "pointer",
+        border: `1px solid ${enhanced[k] ? c.greenBorder : border}`,
+        background: enhanced[k] ? c.greenLight : bg,
+        color: enhanced[k] ? c.green : color, transition: "all 0.3s",
+      }}>{enhanced[k] ? `✓ ${doneLabel || "Done"}` : `✦ ${label}`}</button>
+    );
+
+    return (
+      <div>
+        {/* Header + AI ticker */}
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 20 }}>
+          <div>
+            <h1 style={{ fontSize: 22, fontWeight: 800, margin: "0 0 2px", letterSpacing: "-0.02em" }}>Your Business</h1>
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <div style={{ width: 5, height: 5, borderRadius: "50%", background: c.purple, animation: "pulse 2s infinite" }} />
+              <span style={{ fontSize: 11, color: c.purple }}>{aiTicker[aiPulse]}</span>
+            </div>
+          </div>
+        </div>
+
+        <style>{`@keyframes pulse { 0%,100% { opacity:1 } 50% { opacity:0.3 } }`}</style>
+
+        {/* Row 1 — ebook + landing page previews */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+
+          {/* EBOOK */}
+          <Card style={{ padding: 0, overflow: "hidden", cursor: "pointer", transition: "border-color 0.15s" }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = c.purpleBorder}
+            onMouseLeave={e => e.currentTarget.style.borderColor = c.border}>
+            <div style={{ display: "flex" }}>
+              <div style={{ width: 88, background: "#FAFAFA", borderRight: `1px solid ${c.border}`, padding: "12px 8px", flexShrink: 0 }}>
+                <div style={{ width: "80%", height: 7, background: c.purple + "30", borderRadius: 2, margin: "0 auto 5px" }} />
+                <div style={{ width: "50%", height: 4, background: c.purple + "15", borderRadius: 2, margin: "0 auto 7px" }} />
+                <div style={{ width: "100%", height: 1, background: c.border, marginBottom: 5 }} />
+                {[90,80,95,70,85,75,90].map((w,i) => <div key={i} style={{ width: `${w}%`, height: 2.5, background: c.border, borderRadius: 2, marginBottom: 2.5 }} />)}
+              </div>
+              <div style={{ flex: 1, padding: "14px 16px" }}>
+                <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>📖 Your Ebook</div>
+                <div style={{ fontSize: 11, color: c.muted, marginBottom: 10 }}>12 pages · 4 chapters · Ready to edit</div>
+                <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                  <EnhanceBtn k="intro" label="Strengthen intro" doneLabel="Intro updated" />
+                  <EnhanceBtn k="case" label="Add case study" doneLabel="Added" />
+                  <EnhanceBtn k="ch3" label="Expand ch.3" doneLabel="Expanded" />
+                </div>
+              </div>
+            </div>
+          </Card>
+
+          {/* LANDING PAGE */}
+          <Card style={{ padding: 0, overflow: "hidden", cursor: "pointer", transition: "border-color 0.15s" }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = c.blueBorder}
+            onMouseLeave={e => e.currentTarget.style.borderColor = c.border}>
+            <div style={{ display: "flex" }}>
+              <div style={{ width: 88, background: "#fff", borderRight: `1px solid ${c.border}`, overflow: "hidden", flexShrink: 0 }}>
+                <div style={{ height: 12, background: "#F0F1F3", borderBottom: `1px solid ${c.border}`, display: "flex", alignItems: "center", padding: "0 4px", gap: 2 }}>
+                  {["#FF5F57","#FFBD2E","#28CA42"].map((col,i) => <div key={i} style={{ width: 4, height: 4, borderRadius: "50%", background: col }} />)}
+                </div>
+                <div style={{ padding: "6px 6px" }}>
+                  <div style={{ width: "80%", height: 5, background: c.purple + "25", borderRadius: 2, marginBottom: 3 }} />
+                  <div style={{ width: "55%", height: 5, background: c.purple + "15", borderRadius: 2, marginBottom: 5 }} />
+                  <div style={{ width: "60%", height: 3, background: c.border, borderRadius: 2, marginBottom: 2 }} />
+                  <div style={{ width: "45%", height: 3, background: c.border, borderRadius: 2, marginBottom: 5 }} />
+                  <div style={{ width: 28, height: 8, background: c.purple, borderRadius: 2 }} />
+                </div>
+              </div>
+              <div style={{ flex: 1, padding: "14px 16px" }}>
+                <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>🖥️ Landing Page</div>
+                <div style={{ fontSize: 11, color: c.muted, marginBottom: 10 }}>yoursite.samcart.com · Live</div>
+                <div style={{ display: "flex", gap: 4, flexWrap: "wrap" }}>
+                  <EnhanceBtn k="proof" label="Add social proof" doneLabel="Added" color={c.blue} bg={c.blueLight} border={c.blueBorder} />
+                  <EnhanceBtn k="faq" label="Add FAQ" doneLabel="Added" color={c.blue} bg={c.blueLight} border={c.blueBorder} />
+                  <EnhanceBtn k="headline" label="Stronger headline" doneLabel="Updated" color={c.blue} bg={c.blueLight} border={c.blueBorder} />
+                </div>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Row 2 — products + revenue side by side */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12, marginBottom: 12 }}>
+
+          {/* PRODUCTS */}
+          <Card style={{ padding: "16px 18px" }}>
+            <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 10 }}>📦 Your Products</div>
+            {[
+              { name: "Starter Package", price: "$49" },
+              { name: "Premium Package", price: "$89" },
+            ].map((p, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "8px 0", borderTop: i > 0 ? `1px solid ${c.border}` : "none" }}>
+                <div style={{ width: 32, height: 32, borderRadius: 7, background: `linear-gradient(135deg, ${c.purple}15, ${c.blue}15)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 13, fontWeight: 800, color: c.purple }}>$</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 13, fontWeight: 700 }}>{p.name}</div>
+                  <div style={{ fontSize: 11, color: c.muted }}>{p.price}</div>
+                </div>
+                <Pill bg={c.greenLight} color={c.green} border={c.greenBorder}>Live</Pill>
+              </div>
+            ))}
+            <div style={{ borderTop: `1px solid ${c.border}`, paddingTop: 8, marginTop: 4 }}>
+              <EnhanceBtn k="bump" label="Generate order bump (+28% avg revenue)" doneLabel="Order bump added" />
+            </div>
+          </Card>
+
+          {/* REVENUE ESTIMATOR */}
+          <Card style={{ padding: "16px 18px" }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "start", marginBottom: 10 }}>
+              <div style={{ fontSize: 14, fontWeight: 700 }}>💰 Revenue Potential</div>
+              <Pill bg={c.greenLight} color={c.green} border={c.greenBorder}>$49 × 3% conv</Pill>
+            </div>
+            <div style={{ display: "flex", gap: 16, alignItems: "baseline", marginBottom: 10 }}>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: c.muted }}>DAILY</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: c.green }}>${dailyRev}</div>
+              </div>
+              <div style={{ fontSize: 16, color: c.muted }}>·</div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: c.muted }}>MONTHLY</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: c.green }}>${(dailyRev * 30).toLocaleString()}</div>
+              </div>
+              <div style={{ fontSize: 16, color: c.muted }}>·</div>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, color: c.muted }}>YEARLY</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: c.text }}>${(dailyRev * 365).toLocaleString()}</div>
+              </div>
+            </div>
+            <div style={{ fontSize: 10, fontWeight: 600, color: c.muted, marginBottom: 4 }}>{trafficSlider} visitors/day</div>
+            <input type="range" min="10" max="1000" step="10" value={trafficSlider}
+              onChange={e => setTrafficSlider(parseInt(e.target.value))}
+              style={{ width: "100%", height: 6, appearance: "none", WebkitAppearance: "none", background: `linear-gradient(90deg, ${c.green} ${(trafficSlider / 1000) * 100}%, ${c.border} ${(trafficSlider / 1000) * 100}%)`, borderRadius: 3, outline: "none", cursor: "pointer" }}
+            />
+            <div style={{ display: "flex", justifyContent: "space-between", fontSize: 9, color: c.muted, marginTop: 3 }}>
+              <span>10</span><span>250</span><span>500</span><span>1,000</span>
+            </div>
+          </Card>
+        </div>
+
+        {/* Row 3 — content grid */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 12, marginBottom: 12 }}>
+          {[
+            { icon: "📧", name: "Email Sequence", sub: "5 emails · Launch series", pill: "Review & send", pillColor: c.amber, pillBg: c.amberLight, pillBorder: c.amberBorder },
+            { icon: "📱", name: "Social Posts", sub: "9 posts · 3 platforms", pill: "Review & post", pillColor: c.blue, pillBg: c.blueLight, pillBorder: c.blueBorder },
+            { icon: "🔗", name: "Share Your Link", sub: "yoursite.samcart.com", pill: "Copy link", pillColor: c.purple, pillBg: c.purpleLight, pillBorder: c.purpleBorder },
+          ].map((item, i) => (
+            <Card key={i} style={{ padding: "14px 16px", cursor: "pointer", transition: "border-color 0.15s" }}
+              onMouseEnter={e => e.currentTarget.style.borderColor = item.pillBorder}
+              onMouseLeave={e => e.currentTarget.style.borderColor = c.border}>
+              <div style={{ fontSize: 20, marginBottom: 6 }}>{item.icon}</div>
+              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 2 }}>{item.name}</div>
+              <div style={{ fontSize: 11, color: c.muted, marginBottom: 8 }}>{item.sub}</div>
+              <Pill bg={item.pillBg} color={item.pillColor} border={item.pillBorder}>{item.pill}</Pill>
+            </Card>
+          ))}
+        </div>
+
+        {/* Connect payments CTA */}
+        <Card style={{ padding: "14px 18px", borderLeft: `3px solid ${c.green}`, marginBottom: 12 }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <span style={{ fontSize: 16 }}>💳</span>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 700 }}>Connect Stripe to start earning</div>
+                <div style={{ fontSize: 11, color: c.muted }}>Everything's ready — just link your payment method</div>
+              </div>
+            </div>
+            <button style={{ padding: "8px 16px", borderRadius: 8, border: "none", background: `linear-gradient(135deg, ${c.green}, ${c.green}cc)`, color: "#fff", fontSize: 12, fontWeight: 700, cursor: "pointer" }}>Connect Stripe →</button>
+          </div>
+        </Card>
+
+        {/* AI next moves */}
+        <Card style={{ padding: "14px 18px", borderLeft: `3px solid ${c.purple}` }}>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+            <span style={{ fontSize: 12 }}>✦ <strong>Next move:</strong> Creators who add a free lead magnet get 3× more email subscribers.</span>
+            <button style={{ padding: "5px 12px", borderRadius: 6, border: `1px solid ${c.purpleBorder}`, background: c.purpleLight, color: c.purple, fontSize: 11, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap" }}>✦ Generate Lead Magnet</button>
+          </div>
+        </Card>
+      </div>
+    );
+  };
+
+  // ════════════════════════════════════════════
+  //  HOME DASHBOARD (Growth Mode)
   // ════════════════════════════════════════════
   const HomePage = () => {
     const AI = () => <span style={{ fontSize: 11, marginRight: 2 }}>✦</span>;
@@ -1407,7 +1618,7 @@ const Dashboard = ({ onNewBusiness }) => {
   };
 
   // ─── Router ───
-  const pages = { home: HomePage, products: ProductsPage, pages: PagesPage, growth: GrowthPage, sales: SalesPage, apps: AppsPage };
+  const pages = { home: dashMode === "launch" ? LaunchHomePage : HomePage, products: ProductsPage, pages: PagesPage, growth: GrowthPage, sales: SalesPage, apps: AppsPage };
   const CurrentPage = pages[currentPage] || HomePage;
 
   return (
@@ -1424,7 +1635,7 @@ const Dashboard = ({ onNewBusiness }) => {
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div style={{ background: c.card, borderRadius: 14, border: `1px solid ${c.purpleBorder}`, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 -4px 24px rgba(0,0,0,0.08), 0 0 0 1px rgba(117,52,237,0.1)" }}>
             <div style={{ width: 30, height: 30, borderRadius: 8, background: `linear-gradient(135deg, ${c.purple}, ${c.blue})`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 15, flexShrink: 0 }}>✦</div>
-            <input placeholder="Ask anything — 'Increase my revenue', 'Write an email campaign', 'Why are Masterclass sales down?', 'Generate 5 social posts'..." style={{ flex: 1, border: "none", background: "transparent", padding: "6px 4px", fontSize: 13, outline: "none", color: c.text }} />
+            <input placeholder={dashMode === "launch" ? "Try: 'Help me write my first social post', 'Add a testimonial section', 'Create a lead magnet'..." : "Ask anything — 'Increase my revenue', 'Write an email campaign', 'Why are Masterclass sales down?'..."} style={{ flex: 1, border: "none", background: "transparent", padding: "6px 4px", fontSize: 13, outline: "none", color: c.text }} />
             <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
               <span style={{ fontSize: 10, color: c.muted, padding: "4px 8px", background: c.bg, borderRadius: 4, cursor: "pointer" }}>Products</span>
               <span style={{ fontSize: 10, color: c.muted, padding: "4px 8px", background: c.bg, borderRadius: 4, cursor: "pointer" }}>Pages</span>
@@ -2087,17 +2298,19 @@ const Onboarding = ({ onComplete }) => {
 const Root = () => {
   const [mode, setMode] = useState("onboarding");
   const [onboardingKey, setOnboardingKey] = useState(0);
+  const [isNew, setIsNew] = useState(true);
   const startNewBusiness = () => {
     setOnboardingKey(prev => prev + 1);
+    setIsNew(true);
     setMode("onboarding");
   };
   return (
     <div>
       <div style={{ display: mode === "onboarding" ? "block" : "none" }}>
-        <Onboarding key={onboardingKey} onComplete={() => setMode("dashboard")} />
+        <Onboarding key={onboardingKey} onComplete={() => { setIsNew(true); setMode("dashboard"); }} />
       </div>
       <div style={{ display: mode === "dashboard" ? "block" : "none" }}>
-        <Dashboard onNewBusiness={startNewBusiness} />
+        <Dashboard onNewBusiness={startNewBusiness} isNew={isNew} />
       </div>
     </div>
   );
