@@ -1469,10 +1469,115 @@ const OPill = ({ bg, color, border, children }) => (
 );
 const Onboarding = ({ onComplete }) => {
   const [step, setStep] = useState("welcome");
-  const [idea, setIdea] = useState("I want to sell an online course about watercolor painting for beginners. I'd price it around $49 and include video lessons, practice templates, and a community.");
+  const [idea, setIdea] = useState("");
+  const [ideaPhase, setIdeaPhase] = useState("spark"); // spark, expanding, audience, vibe, outcome, summary
+  const [expandedIdea, setExpandedIdea] = useState("");
+  const [selectedAudience, setSelectedAudience] = useState([]);
+  const [selectedVibe, setSelectedVibe] = useState(null);
+  const [selectedOutcomes, setSelectedOutcomes] = useState([]);
   const [genProgress, setGenProgress] = useState(0);
   const [activeGen, setActiveGen] = useState(0);
   const [readyReveal, setReadyReveal] = useState(false);
+  const [typingIdx, setTypingIdx] = useState(0);
+  const [autoEnabled, setAutoEnabled] = useState(false);
+  const expandTimerRef = useRef(null);
+  const idleTimerRef = useRef(null);
+
+  // Auto-enable expand button after 5s of inactivity
+  useEffect(() => {
+    if (ideaPhase !== "spark") return;
+    idleTimerRef.current = setTimeout(() => setAutoEnabled(true), 5000);
+    return () => clearTimeout(idleTimerRef.current);
+  }, [ideaPhase]);
+
+  // Simulated AI expansion based on the spark idea
+  const expansionText = "A comprehensive beginner-friendly watercolor course that takes students from their very first brushstroke to completing beautiful, frame-worthy paintings. Covers essential techniques including wet-on-wet, color mixing, brush control, and composition. Includes guided video lessons, downloadable practice templates, reference photo packs, and access to a supportive community of fellow learners. Perfect for creative adults who've always wanted to paint but didn't know where to start.";
+
+  // Audience options (would be AI-generated from the idea in production)
+  const audienceOptions = [
+    { id: "beginners", emoji: "🌱", label: "Complete beginners", desc: "Never picked up a brush" },
+    { id: "hobbyists", emoji: "🎨", label: "Hobbyists leveling up", desc: "Some experience, want more" },
+    { id: "parents", emoji: "👨‍👩‍👧", label: "Parents & kids", desc: "Creative family activity" },
+    { id: "retirees", emoji: "☀️", label: "Retirees & empty nesters", desc: "New chapter, new hobby" },
+  ];
+
+  // Vibe options — each drives colors, tone, page style
+  const vibeOptions = [
+    { id: "custom", emoji: "🎨", label: "I'll pick my own", desc: "Choose colors on the next step", colors: ["#7534ED", "#2563EB", "#F3EFFE"], accent: "#7534ED" },
+    { id: "calm", emoji: "🌿", label: "Calm & nurturing", desc: "Soft, encouraging, gentle", colors: ["#7C9885", "#B8D4C3", "#F0F7F4"], accent: "#5B8A6F" },
+    { id: "premium", emoji: "✨", label: "Premium & polished", desc: "Elegant, high-end, refined", colors: ["#2D2B55", "#7C71D8", "#F3F1FF"], accent: "#7C71D8" },
+    { id: "playful", emoji: "🎈", label: "Fun & playful", desc: "Bright, warm, approachable", colors: ["#FF9F43", "#FECA57", "#FFF8E7"], accent: "#FF9F43" },
+  ];
+
+  // Outcome options
+  const outcomeOptions = [
+    { id: "first-piece", emoji: "🖼️", label: "Paint their first complete piece" },
+    { id: "daily-practice", emoji: "📅", label: "Build a daily creative practice" },
+    { id: "gift-worthy", emoji: "🎁", label: "Create gift-worthy artwork" },
+    { id: "portfolio", emoji: "📂", label: "Build a portfolio of 10 paintings" },
+    { id: "confidence", emoji: "💪", label: "Feel confident calling themselves an artist" },
+    { id: "relaxation", emoji: "🧘", label: "Find a calming, meditative hobby" },
+  ];
+
+  // Typewriter effect for expansion
+  useEffect(() => {
+    if (ideaPhase !== "expanding") return;
+    if (typingIdx >= expansionText.length) {
+      setTimeout(() => setIdeaPhase("audience"), 600);
+      return;
+    }
+    const speed = typingIdx < 20 ? 18 : (typingIdx % 3 === 0 ? 12 : 8);
+    const timer = setTimeout(() => {
+      setExpandedIdea(expansionText.slice(0, typingIdx + 1));
+      setTypingIdx(prev => prev + 1);
+    }, speed);
+    return () => clearTimeout(timer);
+  }, [ideaPhase, typingIdx]);
+
+  // Auto-trigger expansion after user stops typing
+  const handleIdeaChange = (val) => {
+    setIdea(val);
+    setAutoEnabled(false);
+    if (expandTimerRef.current) clearTimeout(expandTimerRef.current);
+    if (idleTimerRef.current) clearTimeout(idleTimerRef.current);
+    idleTimerRef.current = setTimeout(() => setAutoEnabled(true), 5000);
+    if (val.trim().length > 10) {
+      expandTimerRef.current = setTimeout(() => {
+        setIdeaPhase("expanding");
+        setTypingIdx(0);
+        setExpandedIdea("");
+      }, 2000);
+    }
+  };
+
+  const triggerExpand = () => {
+    if (idea.trim().length < 4) {
+      setIdea("watercolor painting for beginners");
+    }
+    setIdeaPhase("expanding");
+    setTypingIdx(0);
+    setExpandedIdea("");
+  };
+
+  const toggleAudience = (id) => {
+    setSelectedAudience(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const pickVibe = (id) => {
+    setSelectedVibe(id);
+    setTimeout(() => setIdeaPhase("outcome"), 400);
+  };
+
+  const toggleOutcome = (id) => {
+    setSelectedOutcomes(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const goToSummary = () => setIdeaPhase("summary");
+
+  const getVibeColors = () => {
+    const v = vibeOptions.find(v => v.id === selectedVibe);
+    return v ? v : vibeOptions[2]; // default premium
+  };
 
   const pc = "#7534ED";
   const sc = "#2563EB";
@@ -1547,28 +1652,214 @@ const Onboarding = ({ onComplete }) => {
 
   return (
     <div>
-      {/* ═══════ WELCOME ═══════ */}
-      <div style={{ display: step === "welcome" ? "flex" : "none", minHeight: "100vh", background: oc.bg, alignItems: "center", justifyContent: "center" }}>
-        <div style={{ width: 600, animation: "fadeUp 0.5s ease-out" }}>
-          <div style={{ textAlign: "center", marginBottom: 40 }}>
+      {/* ═══════ WELCOME — IDEA BUILDER ═══════ */}
+      <div style={{ display: step === "welcome" ? "flex" : "none", minHeight: "100vh", background: oc.bg, alignItems: "flex-start", justifyContent: "center", paddingTop: 60, paddingBottom: 80 }}>
+        <div style={{ width: 640, animation: "fadeUp 0.5s ease-out" }}>
+          {/* Logo */}
+          <div style={{ textAlign: "center", marginBottom: 36 }}>
             <div style={{ display: "inline-flex", alignItems: "center", gap: 10 }}>
               <div style={{ width: 36, height: 36, borderRadius: 10, background: `linear-gradient(135deg, ${oc.purple}, ${oc.blue})`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 18, fontWeight: 800 }}>✦</div>
               <span style={{ fontSize: 22, fontWeight: 800, letterSpacing: "-0.02em" }}>SamCart</span>
             </div>
           </div>
-          <div style={{ background: oc.card, borderRadius: 12, border: `1px solid ${oc.border}`, padding: "40px 44px" }}>
-            <h1 style={{ fontSize: 28, fontWeight: 800, textAlign: "center", marginBottom: 8, letterSpacing: "-0.02em" }}>Describe your business idea</h1>
-            <p style={{ fontSize: 14, color: oc.sub, textAlign: "center", marginBottom: 28, lineHeight: 1.5 }}>Tell us what you want to sell. Be as detailed as you can — AI will build your entire business from this.</p>
-            <textarea value={idea} onChange={e => setIdea(e.target.value)} style={{ width: "100%", height: 140, border: `1px solid ${oc.border}`, borderRadius: 10, padding: "14px 16px", fontSize: 14, lineHeight: 1.6, resize: "none", outline: "none", color: oc.text, background: oc.bg }} />
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, margin: "20px 0" }}>
-              <div style={{ height: 1, flex: 1, background: oc.border }} /><span style={{ fontSize: 12, color: oc.muted, fontWeight: 600 }}>or</span><div style={{ height: 1, flex: 1, background: oc.border }} />
+
+          <div style={{ background: oc.card, borderRadius: 16, border: `1px solid ${oc.border}`, padding: "36px 40px", boxShadow: "0 8px 32px rgba(0,0,0,0.06)" }}>
+            {/* ── PHASE 1: THE SPARK ── */}
+            <h1 style={{ fontSize: 26, fontWeight: 800, textAlign: "center", marginBottom: 4, letterSpacing: "-0.02em" }}>What do you want to teach, sell, or share?</h1>
+            <p style={{ fontSize: 13, color: oc.sub, textAlign: "center", marginBottom: 24, lineHeight: 1.5 }}>Even a rough idea works — AI will help you shape it</p>
+
+            <div style={{ marginBottom: ideaPhase === "spark" ? 8 : 0 }}>
+              <textarea
+                value={idea}
+                onChange={e => handleIdeaChange(e.target.value)}
+                placeholder="e.g. watercolor painting for beginners, meal prep for busy parents, personal finance for freelancers..."
+                style={{
+                  width: "100%", height: 80, border: `1px solid ${ideaPhase !== "spark" ? oc.border : oc.purpleBorder}`,
+                  borderRadius: 10, padding: "14px 16px", fontSize: 14, lineHeight: 1.6, resize: "none",
+                  outline: "none", color: oc.text, background: ideaPhase !== "spark" ? oc.bg : "#fff",
+                  transition: "all 0.3s",
+                }}
+              />
+              {ideaPhase === "spark" && (
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 16, margin: "16px 0" }}>
+                    <div style={{ height: 1, flex: 1, background: oc.border }} /><span style={{ fontSize: 12, color: oc.muted, fontWeight: 600 }}>or</span><div style={{ height: 1, flex: 1, background: oc.border }} />
+                  </div>
+                  <div style={{ border: `2px dashed ${oc.border}`, borderRadius: 10, padding: 16, textAlign: "center" }}>
+                    <div style={{ fontSize: 20, marginBottom: 4 }}>📄</div>
+                    <div style={{ fontSize: 12, fontWeight: 600 }}>Upload an existing product</div>
+                    <div style={{ fontSize: 11, color: oc.muted }}>PDF, ebook, doc — we'll build around it</div>
+                  </div>
+                  <button onClick={triggerExpand} style={{
+                    width: "100%", marginTop: 16, padding: "11px 14px", borderRadius: 10,
+                    border: "none", background: (autoEnabled || idea.trim().length > 3) ? `linear-gradient(135deg, ${oc.purple}, ${oc.blue})` : oc.border,
+                    color: (autoEnabled || idea.trim().length > 3) ? "#fff" : oc.muted, fontSize: 14, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                    cursor: (autoEnabled || idea.trim().length > 3) ? "pointer" : "default", boxShadow: (autoEnabled || idea.trim().length > 3) ? `0 2px 12px ${oc.purple}30` : "none",
+                    transition: "all 0.3s",
+                  }}>✦ Expand my idea</button>
+                </div>
+              )}
             </div>
-            <div style={{ border: `2px dashed ${oc.border}`, borderRadius: 10, padding: 20, textAlign: "center" }}>
-              <div style={{ fontSize: 24, marginBottom: 6 }}>📄</div>
-              <div style={{ fontSize: 13, fontWeight: 600 }}>Upload your own digital product</div>
-              <div style={{ fontSize: 12, color: oc.muted }}>PDF, ebook, doc, or course outline</div>
-            </div>
-            <button onClick={() => setStep("brand")} style={{ width: "100%", marginTop: 24, padding: 14, borderRadius: 10, border: "none", background: `linear-gradient(135deg, ${oc.purple}, ${oc.blue})`, color: "#fff", fontSize: 15, fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>✦ Continue</button>
+
+            {/* ── PHASE 2: AI EXPANSION ── */}
+            {(ideaPhase !== "spark") && (
+              <div style={{ animation: "fadeUp 0.4s ease-out" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 16, marginBottom: 8 }}>
+                  <div style={{ width: 20, height: 20, borderRadius: 5, background: `linear-gradient(135deg, ${oc.purple}, ${oc.blue})`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 10 }}>✦</div>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: oc.purple }}>AI expanded your idea</span>
+                  {ideaPhase === "expanding" && <span style={{ fontSize: 11, color: oc.muted, marginLeft: 4 }}>writing...</span>}
+                </div>
+                <div style={{
+                  background: `linear-gradient(135deg, ${oc.purple}06, ${oc.blue}06)`,
+                  border: `1px solid ${oc.purpleBorder}40`, borderRadius: 10, padding: "14px 16px",
+                  fontSize: 13, lineHeight: 1.7, color: oc.text, minHeight: 60,
+                }}>
+                  {expandedIdea}<span style={{ opacity: ideaPhase === "expanding" ? 1 : 0, color: oc.purple, transition: "opacity 0.3s" }}>▌</span>
+                </div>
+              </div>
+            )}
+
+            {/* ── PHASE 3A: AUDIENCE ── */}
+            {(["audience", "vibe", "outcome", "summary"].includes(ideaPhase)) && (
+              <div style={{ marginTop: 24, animation: "fadeUp 0.4s ease-out" }}>
+                <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>Who is this for?</div>
+                <div style={{ fontSize: 12, color: oc.muted, marginBottom: 12 }}>Pick one or two that fit best</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  {audienceOptions.map(a => {
+                    const sel = selectedAudience.includes(a.id);
+                    return (
+                      <div key={a.id} onClick={() => toggleAudience(a.id)} style={{
+                        padding: "12px 14px", borderRadius: 10, cursor: "pointer", transition: "all 0.2s",
+                        border: `1.5px solid ${sel ? oc.purple : oc.border}`,
+                        background: sel ? oc.purpleLight : "#fff",
+                        display: "flex", alignItems: "center", gap: 10,
+                      }}>
+                        <span style={{ fontSize: 20 }}>{a.emoji}</span>
+                        <div>
+                          <div style={{ fontSize: 13, fontWeight: 600, color: sel ? oc.purple : oc.text }}>{a.label}</div>
+                          <div style={{ fontSize: 11, color: oc.muted }}>{a.desc}</div>
+                        </div>
+                        {sel && <span style={{ marginLeft: "auto", fontSize: 14, color: oc.purple }}>✓</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+                {ideaPhase === "audience" && selectedAudience.length > 0 && (
+                  <button onClick={() => setIdeaPhase("vibe")} style={{
+                    width: "100%", marginTop: 12, padding: 10, borderRadius: 8, border: "none",
+                    background: oc.purple, color: "#fff", fontSize: 13, fontWeight: 700,
+                  }}>Continue</button>
+                )}
+              </div>
+            )}
+
+            {/* ── PHASE 3B: VIBE ── */}
+            {(["vibe", "outcome", "summary"].includes(ideaPhase)) && (
+              <div style={{ marginTop: 24, animation: "fadeUp 0.4s ease-out" }}>
+                <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>What's the vibe?</div>
+                <div style={{ fontSize: 12, color: oc.muted, marginBottom: 12 }}>Pick a style — or choose your own colors</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8 }}>
+                  {vibeOptions.map(v => {
+                    const sel = selectedVibe === v.id;
+                    return (
+                      <div key={v.id} onClick={() => pickVibe(v.id)} style={{
+                        padding: "14px", borderRadius: 10, cursor: "pointer", transition: "all 0.2s",
+                        border: `1.5px solid ${sel ? v.accent : oc.border}`,
+                        background: sel ? v.colors[2] : "#fff",
+                      }}>
+                        <div style={{ display: "flex", gap: 4, marginBottom: 8 }}>
+                          {v.colors.map((col, i) => <div key={i} style={{ width: 24, height: 24, borderRadius: 6, background: col, border: "1px solid rgba(0,0,0,0.06)" }} />)}
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                          <span style={{ fontSize: 16 }}>{v.emoji}</span>
+                          <div>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: sel ? v.accent : oc.text }}>{v.label}</div>
+                            <div style={{ fontSize: 11, color: oc.muted }}>{v.desc}</div>
+                          </div>
+                        </div>
+                        {sel && <div style={{ marginTop: 6, fontSize: 10, fontWeight: 700, color: v.accent }}>✓ Selected</div>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* ── PHASE 3C: OUTCOMES ── */}
+            {(["outcome", "summary"].includes(ideaPhase)) && (
+              <div style={{ marginTop: 24, animation: "fadeUp 0.4s ease-out" }}>
+                <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 4 }}>What do they walk away with?</div>
+                <div style={{ fontSize: 12, color: oc.muted, marginBottom: 12 }}>Pick the promises your product delivers</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                  {outcomeOptions.map(o => {
+                    const sel = selectedOutcomes.includes(o.id);
+                    return (
+                      <div key={o.id} onClick={() => toggleOutcome(o.id)} style={{
+                        padding: "8px 14px", borderRadius: 100, cursor: "pointer", transition: "all 0.2s",
+                        border: `1.5px solid ${sel ? oc.purple : "transparent"}`,
+                        background: sel ? oc.purpleLight : "#fff",
+                        display: "flex", alignItems: "center", gap: 6, fontSize: 12, fontWeight: 600,
+                        color: sel ? oc.purple : oc.text,
+                        boxShadow: sel ? "none" : `inset 0 0 0 1px ${oc.border}`,
+                      }}>
+                        <span style={{ fontSize: 14 }}>{o.emoji}</span> {o.label}
+                        {sel && <span style={{ fontSize: 11, marginLeft: 2 }}>✓</span>}
+                      </div>
+                    );
+                  })}
+                </div>
+                {ideaPhase === "outcome" && selectedOutcomes.length > 0 && (
+                  <button onClick={goToSummary} style={{
+                    width: "100%", marginTop: 14, padding: 10, borderRadius: 8, border: "none",
+                    background: oc.purple, color: "#fff", fontSize: 13, fontWeight: 700,
+                  }}>See what we'll build →</button>
+                )}
+              </div>
+            )}
+
+            {/* ── PHASE 4: SUMMARY ── */}
+            {ideaPhase === "summary" && (() => {
+              const vb = getVibeColors();
+              const auds = audienceOptions.filter(a => selectedAudience.includes(a.id));
+              const outs = outcomeOptions.filter(o => selectedOutcomes.includes(o.id));
+              return (
+                <div style={{ marginTop: 24, animation: "fadeUp 0.4s ease-out" }}>
+                  <div style={{ background: `linear-gradient(135deg, ${vb.colors[0]}15, ${vb.colors[1]}15)`, border: `1px solid ${vb.accent}25`, borderRadius: 12, padding: "20px 22px", marginBottom: 16 }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 12 }}>
+                      <div style={{ width: 22, height: 22, borderRadius: 6, background: vb.accent, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 10 }}>✦</div>
+                      <span style={{ fontSize: 13, fontWeight: 700, color: vb.accent }}>Here's what we'll build for you</span>
+                    </div>
+                    <div style={{ fontSize: 13, lineHeight: 1.7, color: oc.text, marginBottom: 14 }}>
+                      A <strong>{vb.label.toLowerCase()}</strong> {idea.includes("course") ? "course" : "digital product"} about <strong>{idea.trim().split(/\s+/).slice(0, 8).join(" ")}{idea.trim().split(/\s+/).length > 8 ? "..." : ""}</strong>, designed for {auds.map(a => a.label.toLowerCase()).join(" and ")}. Your customers will {outs.slice(0, 3).map((o, i) => <span key={i}><strong>{o.label.toLowerCase()}</strong>{i < Math.min(outs.length, 3) - 2 ? ", " : i === Math.min(outs.length, 3) - 2 ? " and " : ""}</span>)}.
+                    </div>
+                    <div style={{ display: "flex", gap: 12 }}>
+                      {[
+                        { icon: "📦", label: "2 Products", sub: "Entry + Premium" },
+                        { icon: "🖥️", label: "Landing Page", sub: "Sales-ready" },
+                        { icon: "📧", label: "Email Sequence", sub: "5-part launch" },
+                        { icon: "📱", label: "Social Posts", sub: "9 posts, 3 platforms" },
+                      ].map((item, i) => (
+                        <div key={i} style={{ flex: 1, textAlign: "center", padding: "10px 4px", background: "#fff", borderRadius: 8, border: `1px solid ${oc.border}` }}>
+                          <div style={{ fontSize: 18, marginBottom: 2 }}>{item.icon}</div>
+                          <div style={{ fontSize: 10, fontWeight: 700 }}>{item.label}</div>
+                          <div style={{ fontSize: 9, color: oc.muted }}>{item.sub}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <button onClick={() => selectedVibe === "custom" ? setStep("brand") : startGeneration()} style={{
+                    width: "100%", padding: 14, borderRadius: 10, border: "none",
+                    background: `linear-gradient(135deg, ${vb.accent}, ${oc.blue})`,
+                    color: "#fff", fontSize: 15, fontWeight: 700,
+                    display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+                    boxShadow: `0 4px 16px ${vb.accent}40`,
+                  }}>✦ Generate My Business</button>
+                  <div style={{ textAlign: "center", fontSize: 11, color: oc.muted, marginTop: 8 }}>{selectedVibe === "custom" ? "You'll pick your brand colors next" : "This will take about 30 seconds"}</div>
+                </div>
+              );
+            })()}
+
           </div>
         </div>
       </div>
