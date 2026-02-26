@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>SamCart — Navigation Prototype</title>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&amp;display=swap" rel="stylesheet" />
   <style>* { margin: 0; padding: 0; box-sizing: border-box; } body { font-family: 'DM Sans', -apple-system, sans-serif; } button { font-family: inherit; } input { font-family: inherit; } ::-webkit-scrollbar { height: 6px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #ccc; border-radius: 3px; }</style>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
@@ -64,12 +64,12 @@ const App = () => {
 
   const Metric = ({ label, value, sub: s, change, color, large }) => (
     <div>
-      <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.07em", color: c.muted, marginBottom: 2 }}>{label}</div>
-      <div style={{ display: "flex", alignItems: "baseline", gap: 5 }}>
-        <span style={{ fontSize: large ? 28 : 20, fontWeight: 700, color: color || c.text }}>{value}</span>
-        {change && <span style={{ fontSize: 11, fontWeight: 600, color: change.startsWith("+") ? c.green : change.startsWith("-") ? c.rose : c.muted }}>{change}</span>}
+      <div style={{ fontSize: 10, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em", color: c.muted, marginBottom: 4 }}>{label}</div>
+      <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+        <span style={{ fontSize: large ? 30 : 22, fontWeight: 700, color: color || c.text, letterSpacing: "-0.02em" }}>{value}</span>
+        {change && <span style={{ fontSize: 12, fontWeight: 600, color: change.startsWith("+") ? c.green : change.startsWith("-") ? c.rose : c.muted }}>{change}</span>}
       </div>
-      {s && <div style={{ fontSize: 11, color: c.muted, marginTop: 1 }}>{s}</div>}
+      {s && <div style={{ fontSize: 12, color: c.muted, marginTop: 2 }}>{s}</div>}
     </div>
   );
 
@@ -114,64 +114,123 @@ const App = () => {
 
   // ─── Nav ───
   const navItems = [
-    { key: "home", label: "Home" },
-    { key: "products", label: "Products" },
-    { key: "pages", label: "Pages" },
-    { key: "growth", label: "Growth" },
-    { key: "sales", label: "Sales" },
-    { key: "apps", label: "Apps" },
+    { key: "home", label: "Home", icon: "⌂" },
+    { key: "products", label: "Products", icon: "◎" },
+    { key: "pages", label: "Pages", icon: "⊞" },
+    { key: "growth", label: "Growth", icon: "⋔" },
+    { key: "sales", label: "Sales", icon: "◉" },
+    { key: "apps", label: "Apps", icon: "⊞" },
   ];
+
+  // Sub-navigation items per section
+  const subNavItems = {
+    home: [],
+    products: [{ key: "performance", label: "Performance" }, { key: "catalog", label: "Catalog" }, { key: "deals", label: "Deals" }],
+    pages: [{ key: "overview", label: "Performance" }, { key: "all", label: "All Pages" }, { key: "domains", label: "Domains" }],
+    growth: [{ key: "overview", label: "Overview" }, { key: "email", label: "Email" }, { key: "social", label: "Social Media" }, { key: "affiliates", label: "Affiliates" }, { key: "recovery", label: "Cart Recovery" }, { key: "experiments", label: "Experiments" }],
+    sales: [{ key: "overview", label: "Analytics" }, { key: "orders", label: "Orders" }, { key: "customers", label: "Customers" }, { key: "payments", label: "Payments" }],
+    apps: [],
+  };
+
+  const getSubTab = () => {
+    if (currentPage === "products") return productView;
+    if (currentPage === "pages") return pagesTab;
+    if (currentPage === "growth") return growthTab;
+    if (currentPage === "sales") return salesTab;
+    return null;
+  };
+  const setSubTab = (v) => {
+    if (currentPage === "products") setProductView(v);
+    if (currentPage === "pages") setPagesTab(v);
+    if (currentPage === "growth") setGrowthTab(v);
+    if (currentPage === "sales") setSalesTab(v);
+  };
 
   const Nav = () => (
     <div style={{ position: "sticky", top: 0, zIndex: 10, background: "#fff" }}>
-      {/* Business tabs row */}
-      <div style={{ padding: "0 28px", display: "flex", alignItems: "end", height: 40, gap: 0, borderBottom: `1px solid ${c.border}` }}>
+      {/* Business tabs — compact */}
+      <div style={{ padding: "0 24px", display: "flex", alignItems: "end", height: 34, gap: 0, borderBottom: `1px solid ${c.border}`, background: c.bg }}>
         {businesses.map((b, i) => (
           <div key={i} onClick={() => setActiveBiz(i)} style={{
-            display: "flex", alignItems: "center", gap: 6, padding: "7px 16px",
-            borderRadius: "8px 8px 0 0", cursor: "pointer", marginBottom: -1,
-            background: i === activeBiz ? c.card : "#F8F9FA",
+            display: "flex", alignItems: "center", gap: 5, padding: "5px 14px",
+            borderRadius: "6px 6px 0 0", cursor: "pointer", marginBottom: -1,
+            background: i === activeBiz ? c.card : "#ECEEF1",
             border: i === activeBiz ? `1px solid ${c.border}` : "1px solid transparent",
             borderBottom: i === activeBiz ? `1px solid ${c.card}` : "1px solid transparent",
             transition: "all 0.15s",
           }}
-          onMouseEnter={e => { if (i !== activeBiz) e.currentTarget.style.background = "#ECEEF1"; }}
-          onMouseLeave={e => { if (i !== activeBiz) e.currentTarget.style.background = "#F8F9FA"; }}>
-            <div style={{ width: 18, height: 18, borderRadius: 4, background: b.color, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 9, fontWeight: 800, flexShrink: 0 }}>{b.icon}</div>
-            <span style={{ fontSize: 12, fontWeight: i === activeBiz ? 700 : 500, color: i === activeBiz ? c.text : c.sub, whiteSpace: "nowrap" }}>{b.name}</span>
+          onMouseEnter={e => { if (i !== activeBiz) e.currentTarget.style.background = "#E4E6EA"; }}
+          onMouseLeave={e => { if (i !== activeBiz) e.currentTarget.style.background = "#ECEEF1"; }}>
+            <div style={{ width: 14, height: 14, borderRadius: 3, background: b.color, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 7, fontWeight: 800, flexShrink: 0 }}>{b.icon}</div>
+            <span style={{ fontSize: 11, fontWeight: i === activeBiz ? 700 : 500, color: i === activeBiz ? c.text : c.sub, whiteSpace: "nowrap" }}>{b.name}</span>
           </div>
         ))}
-        {/* + New Business button */}
         <button style={{
-          display: "flex", alignItems: "center", gap: 4, padding: "0 10px",
-          border: `1px dashed ${c.purpleBorder}`, borderRadius: 6, background: "transparent",
-          cursor: "pointer", marginLeft: 8, marginBottom: 6, height: 22,
+          display: "flex", alignItems: "center", gap: 3, padding: "0 8px",
+          border: `1px dashed ${c.purpleBorder}`, borderRadius: 4, background: "transparent",
+          cursor: "pointer", marginLeft: 6, marginBottom: 5, height: 18,
         }}
         onMouseEnter={e => e.currentTarget.style.background = c.purpleLight}
         onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-          <span style={{ fontSize: 13, fontWeight: 700, color: c.purple, lineHeight: 1 }}>+</span>
-          <span style={{ fontSize: 11, fontWeight: 600, color: c.purple }}>New</span>
+          <span style={{ fontSize: 11, fontWeight: 700, color: c.purple, lineHeight: 1 }}>+</span>
+          <span style={{ fontSize: 9, fontWeight: 600, color: c.purple }}>New</span>
         </button>
-
-        {/* User avatar far right */}
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", paddingBottom: 6 }}>
-          <div style={{ width: 26, height: 26, borderRadius: "50%", background: c.blueLight, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 10, fontWeight: 800, color: c.blue }}>JD</div>
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 10, paddingBottom: 5 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 5, padding: "3px 10px", background: c.bg, borderRadius: 6, border: `1px solid ${c.border}` }}>
+            <span style={{ fontSize: 11, color: c.muted }}>⌕</span>
+            <input placeholder="Search..." style={{ border: "none", background: "transparent", fontSize: 11, outline: "none", color: c.text, width: 120 }} />
+          </div>
+          <div style={{ width: 22, height: 22, borderRadius: "50%", background: c.blueLight, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, fontWeight: 800, color: c.blue, cursor: "pointer" }}>JD</div>
         </div>
       </div>
 
-      {/* Section navigation row */}
-      <div style={{ padding: "0 28px", display: "flex", alignItems: "center", height: 38, gap: 18, borderBottom: `1px solid ${c.border}` }}>
+      {/* Section navigation — with icons */}
+      <div style={{ padding: "0 24px", display: "flex", alignItems: "center", height: 40, gap: 2, borderBottom: `1px solid ${c.border}` }}>
         {navItems.map(n => (
           <div key={n.key} onClick={() => setCurrentPage(n.key)} style={{
-            fontSize: 12, fontWeight: currentPage === n.key ? 700 : 500,
-            color: currentPage === n.key ? c.blue : c.sub, cursor: "pointer",
-            padding: "9px 0", borderBottom: currentPage === n.key ? `2px solid ${c.blue}` : "2px solid transparent",
-            marginBottom: -1,
-          }}>{n.label}</div>
+            display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 6, cursor: "pointer",
+            background: currentPage === n.key ? c.blueLight : "transparent",
+            color: currentPage === n.key ? c.blue : c.sub,
+            fontWeight: currentPage === n.key ? 700 : 500, fontSize: 13,
+            transition: "all 0.12s",
+          }}
+          onMouseEnter={e => { if (currentPage !== n.key) e.currentTarget.style.background = "#F8F9FA"; }}
+          onMouseLeave={e => { if (currentPage !== n.key) e.currentTarget.style.background = "transparent"; }}>
+            <span style={{ fontSize: 13, opacity: currentPage === n.key ? 1 : 0.5 }}>{n.icon}</span>
+            {n.label}
+          </div>
         ))}
       </div>
     </div>
   );
+
+  // Sidebar for sub-navigation
+  const Sidebar = () => {
+    const items = subNavItems[currentPage] || [];
+    const active = getSubTab();
+    const sectionLabels = { products: "PRODUCTS", pages: "PAGES", growth: "GROWTH", sales: "SALES" };
+    return (
+      <div style={{ width: 180, flexShrink: 0, paddingTop: 8 }}>
+        {items.length > 0 && (
+          <>
+            <div style={{ fontSize: 10, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: c.muted, padding: "8px 16px 8px", marginBottom: 2 }}>{sectionLabels[currentPage]}</div>
+            {items.map(item => (
+              <div key={item.key} onClick={() => setSubTab(item.key)} style={{
+                padding: "8px 16px", fontSize: 13, fontWeight: active === item.key ? 600 : 400,
+                color: active === item.key ? c.blue : c.sub, cursor: "pointer",
+                background: active === item.key ? c.blueLight : "transparent",
+                borderRadius: 6, margin: "1px 8px", transition: "all 0.1s",
+              }}
+              onMouseEnter={e => { if (active !== item.key) e.currentTarget.style.background = c.bg; }}
+              onMouseLeave={e => { if (active !== item.key) e.currentTarget.style.background = "transparent"; }}>
+                {item.label}
+              </div>
+            ))}
+          </>
+        )}
+      </div>
+    );
+  };
 
   // ════════════════════════════════════════════
   //  HOME DASHBOARD
@@ -363,11 +422,6 @@ const App = () => {
           </div>
         </div>
 
-        <TabBar tabs={[
-          { key: "performance", label: "Performance" },
-          { key: "catalog", label: "Catalog" },
-          { key: "deals", label: "Deals" },
-        ]} active={productView} onChange={setProductView} />
 
         {productView === "performance" && (
           <>
@@ -573,19 +627,14 @@ const App = () => {
           <AiBtn strong color={c.purple}>Generate Page</AiBtn>
         </div>
 
-        <TabBar tabs={[
-          { key: "overview", label: "Performance" },
-          { key: "all", label: "All Pages" },
-          { key: "domains", label: "Domains" },
-        ]} active={pagesTab} onChange={setPagesTab} />
 
         {pagesTab === "overview" && (
           <>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
-              <Card style={{ padding: "16px 18px" }}><Metric label="Total Page Views" value="4,179" change="+18%" large /></Card>
-              <Card style={{ padding: "16px 18px" }}><Metric label="Avg Conversion Rate" value="17.2%" change="+2.1%" large /></Card>
-              <Card style={{ padding: "16px 18px" }}><Metric label="Revenue from Pages" value="$5,367" large sub="All checkout conversions" /></Card>
-              <Card style={{ padding: "16px 18px" }}><Metric label="Best Performer" value="Checklist" sub="27.9% conversion" large /></Card>
+              <Card style={{ padding: "20px 22px" }}><Metric label="Total Page Views" value="4,179" change="+18%" large /></Card>
+              <Card style={{ padding: "20px 22px" }}><Metric label="Avg Conversion Rate" value="17.2%" change="+2.1%" large /></Card>
+              <Card style={{ padding: "20px 22px" }}><Metric label="Revenue from Pages" value="$5,367" large sub="All checkout conversions" /></Card>
+              <Card style={{ padding: "20px 22px" }}><Metric label="Best Performer" value="Checklist" sub="27.9% conversion" large /></Card>
             </div>
 
             <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>Pages by Conversion Rate</div>
@@ -663,22 +712,14 @@ const App = () => {
         <p style={{ margin: 0, color: c.sub, fontSize: 13 }}>Promote, experiment, and grow your business · Last 30 days</p>
       </div>
 
-      <TabBar tabs={[
-        { key: "overview", label: "Overview" },
-        { key: "email", label: "Email" },
-        { key: "social", label: "Social Media" },
-        { key: "affiliates", label: "Affiliates" },
-        { key: "recovery", label: "Cart Recovery" },
-        { key: "experiments", label: "Experiments" },
-      ]} active={growthTab} onChange={setGrowthTab} />
 
       {growthTab === "overview" && (
         <>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
-            <Card style={{ padding: "16px 18px" }}><Metric label="Total Traffic" value="4,179" change="+22%" large /></Card>
-            <Card style={{ padding: "16px 18px" }}><Metric label="From Email" value="1,847" change="+18%" large sub="44% of traffic" /></Card>
-            <Card style={{ padding: "16px 18px" }}><Metric label="From Social" value="1,523" change="+34%" large sub="36% of traffic" /></Card>
-            <Card style={{ padding: "16px 18px" }}><Metric label="From Affiliates" value="132" change="+61%" large sub="3% of traffic" /></Card>
+            <Card style={{ padding: "20px 22px" }}><Metric label="Total Traffic" value="4,179" change="+22%" large /></Card>
+            <Card style={{ padding: "20px 22px" }}><Metric label="From Email" value="1,847" change="+18%" large sub="44% of traffic" /></Card>
+            <Card style={{ padding: "20px 22px" }}><Metric label="From Social" value="1,523" change="+34%" large sub="36% of traffic" /></Card>
+            <Card style={{ padding: "20px 22px" }}><Metric label="From Affiliates" value="132" change="+61%" large sub="3% of traffic" /></Card>
           </div>
 
           {/* AI sparkle icon helper */}
@@ -938,10 +979,10 @@ const App = () => {
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
-              <Card style={{ padding: "16px 18px" }}><Metric label="Active Experiments" value="1" large /></Card>
-              <Card style={{ padding: "16px 18px" }}><Metric label="Completed This Month" value="3" large /></Card>
-              <Card style={{ padding: "16px 18px" }}><Metric label="Revenue from Wins" value="+$840" large color={c.green} sub="From applied winners" /></Card>
-              <Card style={{ padding: "16px 18px" }}><Metric label="Avg Lift" value="+18%" large color={c.green} sub="Across all winners" /></Card>
+              <Card style={{ padding: "20px 22px" }}><Metric label="Active Experiments" value="1" large /></Card>
+              <Card style={{ padding: "20px 22px" }}><Metric label="Completed This Month" value="3" large /></Card>
+              <Card style={{ padding: "20px 22px" }}><Metric label="Revenue from Wins" value="+$840" large color={c.green} sub="From applied winners" /></Card>
+              <Card style={{ padding: "20px 22px" }}><Metric label="Avg Lift" value="+18%" large color={c.green} sub="Across all winners" /></Card>
             </div>
 
             {/* Active experiment - detailed */}
@@ -1078,20 +1119,14 @@ const App = () => {
           </div>
         </div>
 
-        <TabBar tabs={[
-          { key: "overview", label: "Analytics" },
-          { key: "orders", label: "Orders" },
-          { key: "customers", label: "Customers" },
-          { key: "payments", label: "Payments" },
-        ]} active={salesTab} onChange={setSalesTab} />
 
         {salesTab === "overview" && (
           <>
             <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 16 }}>
-              <Card style={{ padding: "16px 18px" }}><Metric label="Net Revenue" value="$5,367" change="+23%" large /></Card>
-              <Card style={{ padding: "16px 18px" }}><Metric label="Orders" value="133" change="+12%" large /></Card>
-              <Card style={{ padding: "16px 18px" }}><Metric label="Avg Order Value" value="$40.35" change="+8%" large sub="$33.50 without upsells" /></Card>
-              <Card style={{ padding: "16px 18px" }}><Metric label="Refund Rate" value="1.5%" change="-0.3%" large sub="2 refunds this period" /></Card>
+              <Card style={{ padding: "20px 22px" }}><Metric label="Net Revenue" value="$5,367" change="+23%" large /></Card>
+              <Card style={{ padding: "20px 22px" }}><Metric label="Orders" value="133" change="+12%" large /></Card>
+              <Card style={{ padding: "20px 22px" }}><Metric label="Avg Order Value" value="$40.35" change="+8%" large sub="$33.50 without upsells" /></Card>
+              <Card style={{ padding: "20px 22px" }}><Metric label="Refund Rate" value="1.5%" change="-0.3%" large sub="2 refunds this period" /></Card>
             </div>
 
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
@@ -1358,10 +1393,12 @@ const App = () => {
 
   return (
     <div style={{ fontFamily: "'DM Sans', -apple-system, sans-serif", background: c.bg, minHeight: "100vh", color: c.text }}>
-      <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600;9..40,700;9..40,800&display=swap" rel="stylesheet" />
       <Nav />
-      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "24px 28px 100px" }}>
-        <CurrentPage />
+      <div style={{ display: "flex", maxWidth: 1200, margin: "0 auto" }}>
+        <Sidebar />
+        <div style={{ flex: 1, padding: "24px 28px 100px", minWidth: 0 }}>
+          <CurrentPage />
+        </div>
       </div>
       {/* Global AI Command Bar — sticky bottom */}
       <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 20, background: `linear-gradient(transparent, ${c.bg} 20%)`, padding: "20px 28px 16px" }}>
