@@ -45,6 +45,22 @@ const Dashboard = ({ onNewBusiness, isNew }) => {
   const [salesTab, setSalesTab] = useState("overview");
   const [pagesTab, setPagesTab] = useState("overview");
   const [dashMode, setDashMode] = useState(isNew ? "launch" : "growth");
+  const [aiOpen, setAiOpen] = useState(true);
+  const [aiMessages, setAiMessages] = useState([]);
+
+  // Seed conversation when entering growth mode
+  useEffect(() => {
+    if (dashMode === "growth" && aiMessages.length === 0) {
+      setAiMessages([
+        { role: "user", content: "How does my Playbook funnel convert?" },
+        { role: "ai", type: "funnel-analysis" },
+        { role: "user", content: "What can I do to improve the upsell?" },
+        { role: "ai", type: "upsell-fix" },
+      ]);
+    }
+  }, [dashMode]);
+  const [aiInput, setAiInput] = useState("");
+  const [aiTyping, setAiTyping] = useState(false);
 
   // ─── Colors ───
   const c = {
@@ -135,7 +151,8 @@ const Dashboard = ({ onNewBusiness, isNew }) => {
   const navItems = [
     { key: "home", label: "Home", icon: "⌂" },
     { key: "products", label: "Products", icon: "◎" },
-    { key: "pages", label: "Pages", icon: "⊞" },
+    { key: "pages", label: "Storefront", icon: "⊞" },
+    { key: "funnels", label: "Funnels", icon: "⇉" },
     { key: "growth", label: "Growth", icon: "⋔" },
     { key: "sales", label: "Sales", icon: "◉" },
     { key: "apps", label: "Apps", icon: "⊞" },
@@ -146,6 +163,7 @@ const Dashboard = ({ onNewBusiness, isNew }) => {
     home: [],
     products: [{ key: "performance", label: "Performance" }, { key: "catalog", label: "Catalog" }, { key: "deals", label: "Deals" }],
     pages: [{ key: "overview", label: "Performance" }, { key: "all", label: "All Pages" }, { key: "domains", label: "Domains" }],
+    funnels: [],
     growth: [{ key: "overview", label: "Overview" }, { key: "email", label: "Email" }, { key: "social", label: "Social Media" }, { key: "affiliates", label: "Affiliates" }, { key: "recovery", label: "Cart Recovery" }, { key: "experiments", label: "Experiments" }],
     sales: [{ key: "overview", label: "Analytics" }, { key: "orders", label: "Orders" }, { key: "customers", label: "Customers" }, { key: "payments", label: "Payments" }],
     apps: [],
@@ -851,11 +869,185 @@ const Dashboard = ({ onNewBusiness, isNew }) => {
       <div>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
           <div>
-            <h1 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 2px", letterSpacing: "-0.02em" }}>Pages</h1>
-            <p style={{ margin: 0, color: c.sub, fontSize: 13 }}>8 pages · 7 live · samcarttiger.com</p>
+            <h1 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 2px", letterSpacing: "-0.02em" }}>Storefront</h1>
+            <p style={{ margin: 0, color: c.sub, fontSize: 13 }}>Your store + 8 pages · 7 live · samcarttiger.com</p>
           </div>
           <AiBtn strong color={c.purple}>Generate Page</AiBtn>
         </div>
+
+        {/* ── YOUR STORE — rich link-in-bio preview ── */}
+        <Card style={{ padding: 0, overflow: "hidden", marginBottom: 20 }}>
+          <div style={{ display: "flex" }}>
+            {/* Phone-frame store preview */}
+            <div style={{ width: 300, background: "#F0F1F3", borderRight: `1px solid ${c.border}`, padding: "16px 20px", flexShrink: 0, display: "flex", flexDirection: "column", alignItems: "center" }}>
+              {/* Phone frame */}
+              <div style={{ width: 260, background: "#fff", borderRadius: 20, border: `1px solid ${c.border}`, overflow: "hidden", boxShadow: "0 4px 20px rgba(0,0,0,0.08)" }}>
+                {/* Phone notch */}
+                <div style={{ height: 22, background: "#fff", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <div style={{ width: 60, height: 6, borderRadius: 3, background: "#E5E5E5" }} />
+                </div>
+                {/* Store content — scrollable feel */}
+                <div style={{ maxHeight: 480, overflow: "hidden" }}>
+                  {/* Profile header */}
+                  <div style={{ background: `linear-gradient(135deg, ${c.purple}12, ${c.blue}12)`, padding: "14px 16px 12px", textAlign: "center" }}>
+                    <div style={{ width: 44, height: 44, borderRadius: "50%", background: `linear-gradient(135deg, ${c.purple}, ${c.blue})`, margin: "0 auto 6px", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 16, fontWeight: 800 }}>J</div>
+                    <div style={{ fontSize: 13, fontWeight: 800 }}>Jordan Creates</div>
+                    <div style={{ fontSize: 10, color: c.sub, marginBottom: 6, lineHeight: 1.4 }}>Digital creator · Helping 10k+ people build online businesses</div>
+                    {/* Social icons */}
+                    <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 2 }}>
+                      {[
+                        { icon: "📷", label: "IG" },
+                        { icon: "🎵", label: "TT" },
+                        { icon: "📺", label: "YT" },
+                        { icon: "🐦", label: "X" },
+                      ].map((s, i) => (
+                        <div key={i} style={{ width: 24, height: 24, borderRadius: 6, background: "#fff", border: `1px solid ${c.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 11 }}>{s.icon}</div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Featured product */}
+                  <div style={{ padding: "10px 14px 6px" }}>
+                    <div style={{ fontSize: 8, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: c.purple, marginBottom: 4 }}>⭐ FEATURED</div>
+                    <div style={{ background: `linear-gradient(135deg, ${c.purple}08, ${c.blue}08)`, borderRadius: 10, border: `1px solid ${c.purpleBorder}40`, padding: "10px 12px", display: "flex", gap: 10, alignItems: "center", cursor: "pointer" }}>
+                      <div style={{ width: 40, height: 40, borderRadius: 8, background: `linear-gradient(135deg, ${c.purple}20, ${c.blue}20)`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 18, flexShrink: 0 }}>📖</div>
+                      <div style={{ flex: 1 }}>
+                        <div style={{ fontSize: 11, fontWeight: 700 }}>Creator Playbook</div>
+                        <div style={{ fontSize: 9, color: c.sub }}>The complete guide to selling online</div>
+                      </div>
+                      <div style={{ fontSize: 11, fontWeight: 800, color: c.purple }}>$39</div>
+                    </div>
+                  </div>
+
+                  {/* Product grid */}
+                  <div style={{ padding: "6px 14px" }}>
+                    <div style={{ fontSize: 8, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: c.muted, marginBottom: 4 }}>PRODUCTS</div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 6 }}>
+                      {[
+                        { name: "Masterclass", price: "$79", emoji: "🎓", color: c.blue },
+                        { name: "Templates", price: "$29", emoji: "📋", color: c.green },
+                        { name: "Starter Kit", price: "$19", emoji: "🚀", color: c.amber },
+                        { name: "Free Guide", price: "Free", emoji: "🎁", color: c.rose },
+                      ].map((p, i) => (
+                        <div key={i} style={{ padding: "8px", background: c.bg, borderRadius: 8, border: `1px solid ${c.border}`, textAlign: "center", cursor: "pointer" }}>
+                          <div style={{ fontSize: 16, marginBottom: 2 }}>{p.emoji}</div>
+                          <div style={{ fontSize: 9, fontWeight: 700 }}>{p.name}</div>
+                          <div style={{ fontSize: 9, fontWeight: 700, color: p.price === "Free" ? c.green : p.color }}>{p.price}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Recent posts / content */}
+                  <div style={{ padding: "8px 14px" }}>
+                    <div style={{ fontSize: 8, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: c.muted, marginBottom: 4 }}>LATEST CONTENT</div>
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 4 }}>
+                      {[
+                        { bg: `linear-gradient(135deg, ${c.purple}20, ${c.blue}10)`, icon: "🎨" },
+                        { bg: `linear-gradient(135deg, ${c.amber}15, ${c.rose}10)`, icon: "💡" },
+                        { bg: `linear-gradient(135deg, ${c.green}15, ${c.blue}10)`, icon: "📊" },
+                      ].map((post, i) => (
+                        <div key={i} style={{ aspectRatio: "1", borderRadius: 6, background: post.bg, border: `1px solid ${c.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 16 }}>{post.icon}</div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Email capture */}
+                  <div style={{ padding: "6px 14px" }}>
+                    <div style={{ background: c.bg, borderRadius: 8, border: `1px solid ${c.border}`, padding: "8px 10px", textAlign: "center" }}>
+                      <div style={{ fontSize: 9, fontWeight: 700, marginBottom: 3 }}>✉️ Get weekly creator tips</div>
+                      <div style={{ display: "flex", gap: 4 }}>
+                        <div style={{ flex: 1, height: 22, borderRadius: 5, border: `1px solid ${c.border}`, background: "#fff" }} />
+                        <div style={{ height: 22, padding: "0 10px", borderRadius: 5, background: c.purple, display: "flex", alignItems: "center" }}>
+                          <span style={{ fontSize: 8, fontWeight: 700, color: "#fff" }}>Join</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Testimonial */}
+                  <div style={{ padding: "6px 14px 10px" }}>
+                    <div style={{ background: c.bg, borderRadius: 8, border: `1px solid ${c.border}`, padding: "8px 10px" }}>
+                      <div style={{ fontSize: 9, lineHeight: 1.4, color: c.sub, fontStyle: "italic" }}>"This playbook changed how I think about my business. Worth every penny."</div>
+                      <div style={{ fontSize: 8, fontWeight: 700, color: c.text, marginTop: 3 }}>— Sarah K. ⭐⭐⭐⭐⭐</div>
+                    </div>
+                  </div>
+
+                  {/* Powered by */}
+                  <div style={{ textAlign: "center", padding: "4px 0 10px" }}>
+                    <div style={{ fontSize: 8, color: c.muted }}>Powered by SamCart</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Right side — store info + page mapping */}
+            <div style={{ flex: 1, padding: "20px 24px", display: "flex", flexDirection: "column" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+                <div style={{ fontSize: 16, fontWeight: 800 }}>Your Store</div>
+                <Pill bg={c.greenLight} color={c.green} border={c.greenBorder} dot>Live</Pill>
+              </div>
+              <div style={{ fontSize: 12, color: c.blue, marginBottom: 14, cursor: "pointer" }}>samcarttiger.com/store ↗</div>
+
+              {/* Metrics */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10, marginBottom: 16 }}>
+                <div style={{ padding: "10px 12px", background: c.bg, borderRadius: 8, border: `1px solid ${c.border}` }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: c.muted }}>STORE VISITS</div>
+                  <div style={{ fontSize: 18, fontWeight: 800 }}>847</div>
+                  <div style={{ fontSize: 10, color: c.green, fontWeight: 600 }}>+22% ↑</div>
+                </div>
+                <div style={{ padding: "10px 12px", background: c.bg, borderRadius: 8, border: `1px solid ${c.border}` }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: c.muted }}>STORE REVENUE</div>
+                  <div style={{ fontSize: 18, fontWeight: 800 }}>$1,240</div>
+                  <div style={{ fontSize: 10, color: c.green, fontWeight: 600 }}>+18% ↑</div>
+                </div>
+                <div style={{ padding: "10px 12px", background: c.bg, borderRadius: 8, border: `1px solid ${c.border}` }}>
+                  <div style={{ fontSize: 9, fontWeight: 700, color: c.muted }}>CONVERSION</div>
+                  <div style={{ fontSize: 18, fontWeight: 800 }}>14.3%</div>
+                  <div style={{ fontSize: 10, color: c.sub }}>From store visits</div>
+                </div>
+              </div>
+
+              {/* Page → Product mapping */}
+              <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: c.muted, marginBottom: 8 }}>Pages & Products</div>
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 4, marginBottom: 14 }}>
+                {[
+                  { page: "Playbook Sales Page", type: "Landing", product: "Creator Playbook", price: "$39", conv: "23.6%", color: c.purple },
+                  { page: "Masterclass Replay", type: "Landing", product: "Creator Masterclass", price: "$79", conv: "17.7%", color: c.blue },
+                  { page: "Playbook Checkout", type: "Checkout", product: "Creator Playbook", price: "$39", conv: "13.5%", color: c.purple },
+                  { page: "Templates Checkout", type: "Checkout", product: "Social Media Templates", price: "$29", conv: "11.5%", color: c.green },
+                  { page: "Free Guide Capture", type: "Lead", product: "Free Creator Guide", price: "Free", conv: "24.0%", color: c.amber },
+                ].map((row, i) => (
+                  <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 8px", borderRadius: 6, border: `1px solid ${c.border}`, background: "#fff", fontSize: 11, cursor: "pointer" }}
+                    onMouseEnter={e => e.currentTarget.style.borderColor = row.color}
+                    onMouseLeave={e => e.currentTarget.style.borderColor = c.border}>
+                    <div style={{ width: 4, height: 24, borderRadius: 2, background: row.color, flexShrink: 0 }} />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ fontWeight: 600, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{row.page}</div>
+                      <div style={{ fontSize: 10, color: c.muted }}><Pill bg={c.blueLight} color={c.blue} border={c.blueBorder}>{row.type}</Pill></div>
+                    </div>
+                    <div style={{ fontSize: 10, color: c.muted, textAlign: "center", flexShrink: 0 }}>→</div>
+                    <div style={{ textAlign: "right", flexShrink: 0 }}>
+                      <div style={{ fontWeight: 600, color: row.color, cursor: "pointer" }}>{row.product}</div>
+                      <div style={{ fontSize: 10, color: c.muted }}>{row.price} · {row.conv} conv</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Actions */}
+              <div style={{ display: "flex", gap: 6, marginBottom: 12 }}>
+                <button style={{ padding: "7px 14px", borderRadius: 8, border: `1px solid ${c.border}`, background: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>🎨 Customize</button>
+                <button style={{ padding: "7px 14px", borderRadius: 8, border: `1px solid ${c.border}`, background: "#fff", fontSize: 12, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>📋 Copy Link</button>
+                <AiBtn color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Redesign Store</AiBtn>
+              </div>
+
+              <div style={{ padding: "8px 12px", background: `linear-gradient(135deg, ${c.purple}06, ${c.blue}06)`, borderRadius: 8, border: `1px solid ${c.purpleBorder}30` }}>
+                <div style={{ fontSize: 11, color: c.text }}>✦ <strong>Tip:</strong> Add your store link to your Instagram bio — stores with social links see 40% more traffic.</div>
+              </div>
+            </div>
+          </div>
+        </Card>
 
 
         {pagesTab === "overview" && (
@@ -928,6 +1120,272 @@ const Dashboard = ({ onNewBusiness, isNew }) => {
 
           </>
         )}
+      </div>
+    );
+  };
+
+  // ════════════════════════════════════════════
+  //  FUNNELS PAGE
+  // ════════════════════════════════════════════
+  const FunnelsPage = () => {
+    const [selectedFunnel, setSelectedFunnel] = useState("playbook-main");
+    const AI = () => <span style={{ fontSize: 11, marginRight: 2 }}>✦</span>;
+    const AiBtn = ({ children, color = c.blue, bg = c.blueLight, border = c.blueBorder, small, strong }) => (
+      <button style={{
+        background: strong ? `linear-gradient(135deg, ${color}, ${color}dd)` : bg,
+        color: strong ? "#fff" : color,
+        border: strong ? "none" : `1px solid ${border}`, borderRadius: strong ? 8 : 6,
+        padding: strong ? "8px 16px" : small ? "3px 8px" : "4px 11px",
+        fontSize: small ? 10 : strong ? 13 : 11, fontWeight: 600, cursor: "pointer", whiteSpace: "nowrap",
+        display: "inline-flex", alignItems: "center", gap: 3,
+      }}><AI />{children}</button>
+    );
+
+    const funnels = [
+      {
+        id: "playbook-main",
+        name: "Playbook Launch Funnel",
+        status: "live",
+        revenue: "$4,280",
+        conv: "23.6%",
+        visitors: 1203,
+        steps: [
+          { type: "page", label: "Sales Page", product: "Creator Playbook", conv: "23.6%", visitors: 1203, color: c.purple },
+          { type: "checkout", label: "Checkout", product: "Creator Playbook", conv: "67.2%", visitors: 284, color: c.blue },
+          { type: "bump", label: "Order Bump", product: "Templates Pack", conv: "34%", visitors: 284, color: c.green, optional: true },
+          { type: "upsell", label: "Upsell", product: "Creator Masterclass", conv: "18%", visitors: 191, color: c.amber, optional: true },
+          { type: "confirm", label: "Thank You", conv: "—", visitors: 191, color: c.muted },
+        ],
+      },
+      {
+        id: "masterclass",
+        name: "Masterclass Evergreen",
+        status: "live",
+        revenue: "$6,320",
+        conv: "17.7%",
+        visitors: 634,
+        steps: [
+          { type: "page", label: "Replay Page", product: "Creator Masterclass", conv: "17.7%", visitors: 634, color: c.blue },
+          { type: "checkout", label: "Checkout", product: "Creator Masterclass", conv: "58.1%", visitors: 112, color: c.blue },
+          { type: "upsell", label: "Upsell", product: "Elite Bundle", conv: "22%", visitors: 65, color: c.amber, optional: true },
+          { type: "confirm", label: "Thank You", conv: "—", visitors: 65, color: c.muted },
+        ],
+      },
+      {
+        id: "free-guide",
+        name: "Free Guide → Email Funnel",
+        status: "live",
+        revenue: "$890",
+        conv: "24.0%",
+        visitors: 847,
+        steps: [
+          { type: "page", label: "Capture Page", product: "Free Creator Guide", conv: "24.0%", visitors: 847, color: c.green },
+          { type: "email", label: "5-Part Email Series", conv: "42% open", visitors: 203, color: c.amber },
+          { type: "page", label: "Sales Page", product: "Creator Playbook", conv: "12.3%", visitors: 85, color: c.purple },
+          { type: "checkout", label: "Checkout", product: "Creator Playbook", conv: "71%", visitors: 10, color: c.blue },
+        ],
+      },
+      {
+        id: "starter-kit",
+        name: "Starter Kit Tripwire",
+        status: "paused",
+        revenue: "$340",
+        conv: "11.1%",
+        visitors: 198,
+        steps: [
+          { type: "page", label: "Landing Page", product: "Starter Kit", conv: "11.1%", visitors: 198, color: c.rose },
+          { type: "checkout", label: "Checkout", product: "Starter Kit", conv: "52%", visitors: 22, color: c.blue },
+          { type: "upsell", label: "Upsell", product: "Creator Playbook", conv: "31%", visitors: 11, color: c.purple, optional: true },
+        ],
+      },
+    ];
+
+    const activeFunnel = funnels.find(f => f.id === selectedFunnel) || funnels[0];
+
+    // Visual flow node
+    const FunnelNode = ({ step, index, total }) => {
+      const widthPct = step.visitors ? Math.max(30, (step.visitors / activeFunnel.steps[0].visitors) * 100) : 30;
+      return (
+        <div style={{ display: "flex", alignItems: "center", gap: 0 }}>
+          <div style={{ flex: 1 }}>
+            <div style={{
+              background: "#fff", borderRadius: 10, border: `1.5px solid ${step.color}40`,
+              padding: "12px 14px", position: "relative", overflow: "hidden",
+              cursor: "pointer", transition: "border-color 0.15s",
+            }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = step.color}
+            onMouseLeave={e => e.currentTarget.style.borderColor = step.color + "40"}>
+              {/* Volume bar */}
+              <div style={{ position: "absolute", bottom: 0, left: 0, width: `${widthPct}%`, height: 3, background: `linear-gradient(90deg, ${step.color}40, ${step.color}15)`, borderRadius: "0 2px 0 0" }} />
+
+              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                <div style={{
+                  width: 32, height: 32, borderRadius: 8,
+                  background: step.color + "12",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 14, flexShrink: 0,
+                }}>
+                  {step.type === "page" ? "📄" : step.type === "checkout" ? "💳" : step.type === "bump" ? "➕" : step.type === "upsell" ? "💎" : step.type === "email" ? "📧" : "✅"}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontSize: 13, fontWeight: 700 }}>{step.label}</span>
+                    {step.optional && <span style={{ fontSize: 8, fontWeight: 700, color: c.muted, background: c.bg, padding: "1px 5px", borderRadius: 3 }}>OPT</span>}
+                  </div>
+                  {step.product && <div style={{ fontSize: 11, color: c.blue, cursor: "pointer", fontWeight: 500 }}>→ {step.product}</div>}
+                </div>
+                <div style={{ textAlign: "right" }}>
+                  <div style={{ fontSize: 14, fontWeight: 800, color: step.conv === "—" ? c.muted : c.text }}>{step.conv}</div>
+                  <div style={{ fontSize: 10, color: c.muted }}>{step.visitors.toLocaleString()} visitors</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {/* Connector arrow */}
+          {index < total - 1 && (
+            <div style={{ width: 32, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+                <div style={{ width: 2, height: 8, background: c.border }} />
+                <div style={{ fontSize: 10, color: c.muted }}>▼</div>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    };
+
+    return (
+      <div>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
+          <div>
+            <h1 style={{ fontSize: 24, fontWeight: 800, margin: "0 0 2px", letterSpacing: "-0.02em" }}>Funnels</h1>
+            <p style={{ margin: 0, color: c.sub, fontSize: 13 }}>{funnels.length} funnels · {funnels.filter(f => f.status === "live").length} live</p>
+          </div>
+          <AiBtn strong color={c.purple}>Generate Funnel</AiBtn>
+        </div>
+
+        {/* Funnel metrics */}
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 20 }}>
+          <Card style={{ padding: "20px 22px" }}><Metric label="Total Funnel Revenue" value="$11,830" change="+24%" large /></Card>
+          <Card style={{ padding: "20px 22px" }}><Metric label="Active Funnels" value="3" large sub="1 paused" /></Card>
+          <Card style={{ padding: "20px 22px" }}><Metric label="Avg Upsell Take Rate" value="23.7%" change="+4.2%" large /></Card>
+          <Card style={{ padding: "20px 22px" }}><Metric label="Avg Order Value" value="$67" change="+$12" large sub="With upsells" /></Card>
+        </div>
+
+        <div style={{ display: "grid", gridTemplateColumns: "280px 1fr", gap: 16 }}>
+          {/* Funnel list */}
+          <div>
+            <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: c.muted, marginBottom: 8 }}>YOUR FUNNELS</div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+              {funnels.map(f => (
+                <Card key={f.id} onClick={() => setSelectedFunnel(f.id)} style={{
+                  padding: "12px 14px", cursor: "pointer",
+                  border: selectedFunnel === f.id ? `2px solid ${c.purple}` : `1px solid ${c.border}`,
+                  transition: "border-color 0.15s",
+                }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 4 }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: selectedFunnel === f.id ? c.purple : c.text }}>{f.name}</span>
+                    <Pill
+                      bg={f.status === "live" ? c.greenLight : c.bg}
+                      color={f.status === "live" ? c.green : c.muted}
+                      border={f.status === "live" ? c.greenBorder : c.border}
+                      dot={f.status === "live"}
+                    >{f.status === "live" ? "Live" : "Paused"}</Pill>
+                  </div>
+                  <div style={{ display: "flex", gap: 12, fontSize: 11 }}>
+                    <span style={{ color: c.sub }}>{f.revenue}</span>
+                    <span style={{ color: c.sub }}>{f.conv} conv</span>
+                    <span style={{ color: c.muted }}>{f.steps.length} steps</span>
+                  </div>
+                </Card>
+              ))}
+              <button style={{ padding: "10px 14px", borderRadius: 8, border: `1.5px dashed ${c.purpleBorder}`, background: "transparent", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", gap: 4 }}>
+                <span style={{ fontSize: 12, fontWeight: 700, color: c.purple }}>+ New Funnel</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Selected funnel — visual flow */}
+          <div>
+            {/* Funnel header */}
+            <Card style={{ padding: "16px 18px", marginBottom: 12 }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+                <div>
+                  <div style={{ fontSize: 16, fontWeight: 800, marginBottom: 2 }}>{activeFunnel.name}</div>
+                  <div style={{ fontSize: 12, color: c.sub }}>{activeFunnel.steps.length} steps · {activeFunnel.visitors.toLocaleString()} visitors → {activeFunnel.revenue} revenue</div>
+                </div>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>Optimize</AiBtn>
+                  <AiBtn small>Duplicate</AiBtn>
+                </div>
+              </div>
+
+              {/* Conversion waterfall bar */}
+              <div style={{ display: "flex", gap: 2, height: 28, borderRadius: 6, overflow: "hidden" }}>
+                {activeFunnel.steps.map((step, i) => {
+                  const pct = (step.visitors / activeFunnel.steps[0].visitors) * 100;
+                  return (
+                    <div key={i} style={{
+                      width: `${Math.max(pct, 5)}%`, height: "100%",
+                      background: `linear-gradient(135deg, ${step.color}60, ${step.color}30)`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      transition: "width 0.3s",
+                    }}>
+                      <span style={{ fontSize: 8, fontWeight: 700, color: step.color, whiteSpace: "nowrap" }}>{pct > 10 ? step.label : ""}</span>
+                    </div>
+                  );
+                })}
+              </div>
+              <div style={{ display: "flex", justifyContent: "space-between", marginTop: 4 }}>
+                <span style={{ fontSize: 9, color: c.muted }}>{activeFunnel.steps[0].visitors.toLocaleString()} entered</span>
+                <span style={{ fontSize: 9, color: c.muted }}>{activeFunnel.steps[activeFunnel.steps.length - 1].visitors.toLocaleString()} completed</span>
+              </div>
+            </Card>
+
+            {/* Flow diagram */}
+            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+              {activeFunnel.steps.map((step, i) => (
+                <FunnelNode key={i} step={step} index={i} total={activeFunnel.steps.length} />
+              ))}
+            </div>
+
+            {/* AI insights for this funnel */}
+            <div style={{ marginTop: 12, display: "flex", flexDirection: "column", gap: 8 }}>
+              {activeFunnel.id === "playbook-main" && (
+                <>
+                  <Card style={{ padding: "12px 16px", borderLeft: `3px solid ${c.green}` }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 12 }}>✦ <strong>Order bump converts at 34%</strong> — above the 25% benchmark. Consider raising the bump price by $5.</span>
+                      <AiBtn small color={c.green} bg={c.greenLight} border={c.greenBorder}>Test Price</AiBtn>
+                    </div>
+                  </Card>
+                  <Card style={{ padding: "12px 16px", borderLeft: `3px solid ${c.amber}` }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                      <span style={{ fontSize: 12 }}>✦ <strong>Upsell at 18% is below average.</strong> Try a video pitch instead of static copy — typically lifts to 25%+.</span>
+                      <AiBtn small color={c.amber} bg={c.amberLight} border={c.amberBorder}>Generate Video Script</AiBtn>
+                    </div>
+                  </Card>
+                </>
+              )}
+              {activeFunnel.id === "starter-kit" && (
+                <Card style={{ padding: "12px 16px", borderLeft: `3px solid ${c.rose}` }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 12 }}>⚠️ <strong>This funnel is paused.</strong> It was converting at 11.1% — below your 17% average. Want AI to redesign the landing page?</span>
+                    <AiBtn small color={c.purple} bg={c.purpleLight} border={c.purpleBorder}>AI Redesign</AiBtn>
+                  </div>
+                </Card>
+              )}
+              {activeFunnel.id === "free-guide" && (
+                <Card style={{ padding: "12px 16px", borderLeft: `3px solid ${c.blue}` }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 12 }}>✦ <strong>42% email open rate is excellent.</strong> This funnel generates $4.38 per lead. Consider increasing ad spend.</span>
+                    <AiBtn small>Calculate ROI</AiBtn>
+                  </div>
+                </Card>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
     );
   };
@@ -1618,35 +2076,359 @@ const Dashboard = ({ onNewBusiness, isNew }) => {
   };
 
   // ─── Router ───
-  const pages = { home: dashMode === "launch" ? LaunchHomePage : HomePage, products: ProductsPage, pages: PagesPage, growth: GrowthPage, sales: SalesPage, apps: AppsPage };
+  const pages = { home: dashMode === "launch" ? LaunchHomePage : HomePage, products: ProductsPage, pages: PagesPage, funnels: FunnelsPage, growth: GrowthPage, sales: SalesPage, apps: AppsPage };
   const CurrentPage = pages[currentPage] || HomePage;
+
+  // AI send handler with simulated rich responses
+  const aiRespond = (query) => {
+    const q = query.toLowerCase();
+    let response;
+    if (q.includes("funnel") || q.includes("convert") || q.includes("playbook")) {
+      response = { type: "funnel-analysis" };
+    } else if (q.includes("upsell") || q.includes("improve")) {
+      response = { type: "upsell-fix" };
+    } else if (q.includes("traffic") || q.includes("visitor")) {
+      response = { type: "traffic-explainer" };
+    } else if (q.includes("social") || q.includes("post") || q.includes("instagram")) {
+      response = { type: "social-post" };
+    } else if (q.includes("email") || q.includes("subject")) {
+      response = { type: "email-card" };
+    } else if (q.includes("price") || q.includes("revenue") || q.includes("money")) {
+      response = { type: "revenue-tip" };
+    } else {
+      response = { type: "text", text: `Great question! Based on your business, I'd recommend focusing on growing your email list first. Creators with 500+ subscribers typically see 3x more sales in their first month. Want me to generate a lead magnet to help you get started?` };
+    }
+    return response;
+  };
+
+  const sendAi = () => {
+    if (!aiInput.trim()) return;
+    const q = aiInput.trim();
+    setAiMessages(prev => [...prev, { role: "user", content: q }]);
+    setAiInput("");
+    setAiTyping(true);
+    setTimeout(() => {
+      const resp = aiRespond(q);
+      setAiMessages(prev => [...prev, { role: "ai", ...resp }]);
+      setAiTyping(false);
+    }, 1200);
+  };
+
+  // AI card components
+  const AiTrafficCard = () => (
+    <div style={{ background: "#fff", borderRadius: 10, border: `1px solid ${c.border}`, overflow: "hidden", marginBottom: 4 }}>
+      <div style={{ padding: "10px 12px", fontSize: 12, color: c.text, lineHeight: 1.5 }}>Here are the 3 main ways to drive traffic to your store:</div>
+      <div style={{ padding: "0 12px 10px", display: "flex", flexDirection: "column", gap: 6 }}>
+        {[
+          { icon: "📱", title: "Social Media", desc: "Share your link on Instagram, TikTok, X", stat: "~60% of creator traffic", color: c.purple, action: "Generate 5 posts" },
+          { icon: "📧", title: "Email List", desc: "Build a list, send weekly value", stat: "3× higher conversion", color: c.blue, action: "Create lead magnet" },
+          { icon: "🤝", title: "Affiliates", desc: "Let others promote you for a cut", stat: "Avg 25% of VIP revenue", color: c.green, action: "Set up affiliates" },
+        ].map((ch, i) => (
+          <div key={i} style={{ padding: "10px", borderRadius: 8, border: `1px solid ${c.border}`, background: c.bg }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
+              <span style={{ fontSize: 16 }}>{ch.icon}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 12, fontWeight: 700 }}>{ch.title}</div>
+                <div style={{ fontSize: 10, color: c.muted }}>{ch.desc}</div>
+              </div>
+              <span style={{ fontSize: 9, fontWeight: 700, color: ch.color, background: ch.color + "12", padding: "2px 6px", borderRadius: 4 }}>{ch.stat}</span>
+            </div>
+            <button style={{ width: "100%", padding: "6px 0", borderRadius: 6, border: "none", background: `linear-gradient(135deg, ${ch.color}, ${ch.color}cc)`, color: "#fff", fontSize: 10, fontWeight: 700, cursor: "pointer", marginTop: 4 }}>✦ {ch.action}</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const AiSocialPostCard = () => (
+    <div style={{ background: "#fff", borderRadius: 10, border: `1px solid ${c.border}`, overflow: "hidden", marginBottom: 4 }}>
+      <div style={{ padding: "10px 12px", fontSize: 12, color: c.text, lineHeight: 1.5 }}>Here's a launch post for Instagram. Tap to edit, or I can make more:</div>
+      <div style={{ padding: "0 12px 10px" }}>
+        <div style={{ background: c.bg, borderRadius: 8, border: `1px solid ${c.border}`, padding: "10px" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 6 }}>
+            <div style={{ width: 20, height: 20, borderRadius: "50%", background: `linear-gradient(135deg, ${c.purple}, ${c.blue})`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 8, fontWeight: 800 }}>J</div>
+            <span style={{ fontSize: 10, fontWeight: 700 }}>jordancreates</span>
+            <Pill bg={c.blueLight} color={c.blue} border={c.blueBorder}>Instagram</Pill>
+          </div>
+          <div style={{ fontSize: 11, lineHeight: 1.5, color: c.text, cursor: "text" }}>
+            🚀 I just published my Creator Playbook — everything I learned building a 6-figure online business in one guide.<br/><br/>
+            Inside you'll find:<br/>
+            ✅ The exact funnel I use<br/>
+            ✅ Email templates that convert<br/>
+            ✅ My pricing strategy<br/><br/>
+            Link in bio 👆
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 4, marginTop: 6 }}>
+          <button style={{ flex: 1, padding: "6px", borderRadius: 6, border: `1px solid ${c.border}`, background: "#fff", fontSize: 10, fontWeight: 600, cursor: "pointer" }}>📋 Copy</button>
+          <button style={{ flex: 1, padding: "6px", borderRadius: 6, border: `1px solid ${c.border}`, background: "#fff", fontSize: 10, fontWeight: 600, cursor: "pointer" }}>🔄 Rewrite</button>
+          <button style={{ flex: 1, padding: "6px", borderRadius: 6, border: "none", background: c.purple, color: "#fff", fontSize: 10, fontWeight: 600, cursor: "pointer" }}>✦ 4 more</button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const AiEmailCard = () => (
+    <div style={{ background: "#fff", borderRadius: 10, border: `1px solid ${c.border}`, overflow: "hidden", marginBottom: 4 }}>
+      <div style={{ padding: "10px 12px", fontSize: 12, color: c.text, lineHeight: 1.5 }}>Here's a subject line test for your next email blast:</div>
+      <div style={{ padding: "0 12px 10px", display: "flex", flexDirection: "column", gap: 4 }}>
+        {[
+          { line: "The #1 mistake new creators make (and the fix)", est: "~28% open rate" },
+          { line: "I wish someone told me this when I started", est: "~32% open rate" },
+          { line: "Your free guide is inside 👀", est: "~35% open rate" },
+        ].map((sl, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 6, border: `1px solid ${c.border}`, background: c.bg, cursor: "pointer" }}
+            onMouseEnter={e => e.currentTarget.style.borderColor = c.blue}
+            onMouseLeave={e => e.currentTarget.style.borderColor = c.border}>
+            <div style={{ flex: 1, fontSize: 11, fontWeight: 600 }}>{sl.line}</div>
+            <span style={{ fontSize: 9, fontWeight: 700, color: c.green }}>{sl.est}</span>
+          </div>
+        ))}
+        <button style={{ width: "100%", padding: "6px 0", borderRadius: 6, border: "none", background: c.blue, color: "#fff", fontSize: 10, fontWeight: 700, cursor: "pointer", marginTop: 2 }}>✦ Draft full email from winner</button>
+      </div>
+    </div>
+  );
+
+  const AiRevenueTipCard = () => (
+    <div style={{ background: "#fff", borderRadius: 10, border: `1px solid ${c.border}`, overflow: "hidden", marginBottom: 4 }}>
+      <div style={{ padding: "10px 12px", fontSize: 12, color: c.text, lineHeight: 1.5 }}>Here are 3 ways to increase your revenue right now:</div>
+      <div style={{ padding: "0 12px 10px", display: "flex", flexDirection: "column", gap: 6 }}>
+        {[
+          { icon: "📈", title: "Add an order bump", impact: "+28% avg", desc: "A small add-on at checkout", cta: "Generate bump" },
+          { icon: "💎", title: "Create an upsell", impact: "+40% avg", desc: "Premium tier after purchase", cta: "Generate upsell" },
+          { icon: "💳", title: "Add payment plans", impact: "+22% conv", desc: "Let customers pay in installments", cta: "Set up plans" },
+        ].map((tip, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 10px", borderRadius: 8, border: `1px solid ${c.border}`, background: c.bg }}>
+            <span style={{ fontSize: 16 }}>{tip.icon}</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 11, fontWeight: 700 }}>{tip.title} <span style={{ color: c.green, fontSize: 10 }}>{tip.impact}</span></div>
+              <div style={{ fontSize: 10, color: c.muted }}>{tip.desc}</div>
+            </div>
+            <button style={{ padding: "4px 8px", borderRadius: 5, border: "none", background: c.purple, color: "#fff", fontSize: 9, fontWeight: 700, cursor: "pointer" }}>✦ {tip.cta}</button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+
+  const AiFunnelAnalysisCard = () => (
+    <div style={{ background: "#fff", borderRadius: 10, border: `1px solid ${c.border}`, overflow: "hidden", marginBottom: 4 }}>
+      <div style={{ padding: "10px 12px", fontSize: 12, color: c.text, lineHeight: 1.5 }}>Here's your Playbook Launch Funnel breakdown:</div>
+      <div style={{ padding: "0 12px 6px" }}>
+        {/* Mini waterfall */}
+        <div style={{ display: "flex", gap: 1, height: 22, borderRadius: 5, overflow: "hidden", marginBottom: 8 }}>
+          {[
+            { label: "Sales Page", pct: 100, color: c.purple },
+            { label: "Checkout", pct: 23.6, color: c.blue },
+            { label: "Bump", pct: 15.8, color: c.green },
+            { label: "Upsell", pct: 4.2, color: c.amber },
+          ].map((s, i) => (
+            <div key={i} style={{ width: `${Math.max(s.pct, 8)}%`, height: "100%", background: s.color + "50", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              <span style={{ fontSize: 7, fontWeight: 700, color: s.color, whiteSpace: "nowrap" }}>{s.pct > 12 ? s.label : ""}</span>
+            </div>
+          ))}
+        </div>
+        {/* Step metrics */}
+        <div style={{ display: "flex", flexDirection: "column", gap: 3 }}>
+          {[
+            { step: "📄 Sales Page", visitors: "1,203", conv: "23.6%", verdict: "strong", color: c.purple },
+            { step: "💳 Checkout", visitors: "284", conv: "67.2%", verdict: "excellent", color: c.blue },
+            { step: "➕ Order Bump", visitors: "284", conv: "34%", verdict: "above avg", color: c.green },
+            { step: "💎 Upsell", visitors: "191", conv: "18%", verdict: "needs work", color: c.amber },
+          ].map((row, i) => (
+            <div key={i} style={{ display: "flex", alignItems: "center", gap: 6, padding: "5px 8px", borderRadius: 6, background: c.bg, border: `1px solid ${c.border}` }}>
+              <span style={{ fontSize: 11, width: 90, flexShrink: 0 }}>{row.step}</span>
+              <span style={{ fontSize: 10, color: c.muted, width: 42 }}>{row.visitors}</span>
+              <span style={{ fontSize: 11, fontWeight: 700, width: 38 }}>{row.conv}</span>
+              <span style={{ fontSize: 9, fontWeight: 700, color: row.verdict === "needs work" ? c.amber : c.green, marginLeft: "auto", background: row.verdict === "needs work" ? c.amberLight : c.greenLight, padding: "1px 5px", borderRadius: 3 }}>{row.verdict}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      <div style={{ padding: "8px 12px", background: c.bg, borderTop: `1px solid ${c.border}`, fontSize: 11, lineHeight: 1.5 }}>
+        <strong>Summary:</strong> Your funnel generated <strong>$4,280</strong> from 1,203 visitors. The upsell step is your weakest link — 18% is below the 25% benchmark. Fixing that could add ~$800/mo.
+      </div>
+    </div>
+  );
+
+  const AiUpsellFixCard = () => (
+    <div style={{ background: "#fff", borderRadius: 10, border: `1px solid ${c.border}`, overflow: "hidden", marginBottom: 4 }}>
+      <div style={{ padding: "10px 12px", fontSize: 12, color: c.text, lineHeight: 1.5 }}>Three ways to lift your upsell from 18% → 25%+:</div>
+      <div style={{ padding: "0 12px 10px", display: "flex", flexDirection: "column", gap: 5 }}>
+        {[
+          { icon: "🎬", title: "Add a video pitch", impact: "+7% avg lift", desc: "60-second personal video outperforms static copy. I can write the script.", cta: "Write script", color: c.purple },
+          { icon: "⏱️", title: "Add urgency timer", impact: "+4% avg lift", desc: "15-minute countdown on the upsell page. Creates FOMO.", cta: "Add timer", color: c.amber },
+          { icon: "💰", title: "Offer a payment plan", impact: "+5% avg lift", desc: "Split the $79 Masterclass into 3×$29. Reduces friction.", cta: "Set up plan", color: c.green },
+        ].map((tip, i) => (
+          <div key={i} style={{ padding: "8px 10px", borderRadius: 8, border: `1px solid ${c.border}`, background: c.bg }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <span style={{ fontSize: 16 }}>{tip.icon}</span>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: 11, fontWeight: 700 }}>{tip.title} <span style={{ color: c.green, fontSize: 10 }}>{tip.impact}</span></div>
+                <div style={{ fontSize: 10, color: c.muted }}>{tip.desc}</div>
+              </div>
+            </div>
+            <button style={{ width: "100%", padding: "5px 0", borderRadius: 5, border: "none", background: `linear-gradient(135deg, ${tip.color}, ${tip.color}cc)`, color: "#fff", fontSize: 10, fontWeight: 700, cursor: "pointer", marginTop: 6 }}>✦ {tip.cta}</button>
+          </div>
+        ))}
+      </div>
+      <div style={{ padding: "8px 12px", background: `linear-gradient(135deg, ${c.purple}06, ${c.blue}06)`, borderTop: `1px solid ${c.purpleBorder}20`, fontSize: 11, color: c.text }}>
+        ✦ Want me to implement all three? I can set up the video page, timer, and payment plan in one go.
+      </div>
+    </div>
+  );
+
+  const AiMessageBubble = ({ msg }) => {
+    if (msg.role === "user") return (
+      <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 8 }}>
+        <div style={{ background: c.purple, color: "#fff", padding: "8px 12px", borderRadius: "12px 12px 2px 12px", maxWidth: "80%", fontSize: 12, lineHeight: 1.4 }}>{msg.content}</div>
+      </div>
+    );
+    return (
+      <div style={{ marginBottom: 8 }}>
+        <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 4 }}>
+          <div style={{ width: 18, height: 18, borderRadius: 5, background: `linear-gradient(135deg, ${c.purple}, ${c.blue})`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 8 }}>✦</div>
+          <span style={{ fontSize: 10, fontWeight: 700, color: c.purple }}>SamCart AI</span>
+        </div>
+        {msg.type === "traffic-explainer" && <AiTrafficCard />}
+        {msg.type === "social-post" && <AiSocialPostCard />}
+        {msg.type === "email-card" && <AiEmailCard />}
+        {msg.type === "revenue-tip" && <AiRevenueTipCard />}
+        {msg.type === "funnel-analysis" && <AiFunnelAnalysisCard />}
+        {msg.type === "upsell-fix" && <AiUpsellFixCard />}
+        {msg.type === "text" && (
+          <div style={{ background: "#fff", borderRadius: 10, border: `1px solid ${c.border}`, padding: "10px 12px", fontSize: 12, lineHeight: 1.5, color: c.text }}>{msg.text}</div>
+        )}
+      </div>
+    );
+  };
 
   return (
     <div style={{ fontFamily: "'DM Sans', -apple-system, sans-serif", background: c.bg, minHeight: "100vh", color: c.text }}>
       <Nav />
-      <div style={{ display: "flex", maxWidth: 1200, margin: "0 auto" }}>
+      <div style={{ display: "flex", maxWidth: 1560, margin: "0 auto" }}>
         <Sidebar />
-        <div style={{ flex: 1, padding: "24px 28px 100px", minWidth: 0 }}>
+        <div style={{ flex: 1, padding: "24px 28px 80px", minWidth: 0 }}>
           <CurrentPage />
         </div>
+
+        {/* AI Sidebar Panel — persistent */}
+        <div style={{
+          width: 340, flexShrink: 0,
+          borderLeft: `1px solid ${c.border}`,
+          background: "#fff", display: "flex", flexDirection: "column", height: "calc(100vh - 74px)", position: "sticky", top: 74,
+        }}>
+          <div style={{ width: 340, display: "flex", flexDirection: "column", height: "100%" }}>
+            {/* Panel header */}
+            <div style={{ padding: "12px 16px", borderBottom: `1px solid ${c.border}`, display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={{ width: 22, height: 22, borderRadius: 6, background: `linear-gradient(135deg, ${c.purple}, ${c.blue})`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 10 }}>✦</div>
+              <span style={{ fontSize: 13, fontWeight: 700, flex: 1 }}>AI Assistant</span>
+              <button onClick={() => setAiMessages([])} style={{ background: "none", border: `1px solid ${c.border}`, borderRadius: 5, padding: "2px 8px", fontSize: 10, color: c.muted, cursor: "pointer" }}>Clear</button>
+            </div>
+
+            {/* Messages area */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "12px 14px" }}>
+              {/* Proactive welcome for launch mode */}
+              {dashMode === "launch" && aiMessages.length === 0 && (
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 6 }}>
+                    <div style={{ width: 18, height: 18, borderRadius: 5, background: `linear-gradient(135deg, ${c.purple}, ${c.blue})`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 8 }}>✦</div>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: c.purple }}>SamCart AI</span>
+                  </div>
+                  <div style={{ background: "#fff", borderRadius: 10, border: `1px solid ${c.border}`, padding: "10px 12px", marginBottom: 10, fontSize: 12, lineHeight: 1.5, color: c.text }}>
+                    Welcome! Your business is set up and ready to go. Here's what I'd focus on first:
+                  </div>
+
+                  {/* Getting your first sale explainer */}
+                  <div style={{ background: "#fff", borderRadius: 10, border: `1px solid ${c.purple}25`, overflow: "hidden", marginBottom: 10 }}>
+                    <div style={{ padding: "8px 12px", background: `linear-gradient(135deg, ${c.purple}08, ${c.blue}06)` }}>
+                      <div style={{ fontSize: 11, fontWeight: 700, color: c.purple }}>🎯 Your path to first sale</div>
+                    </div>
+                    <div style={{ padding: "8px 12px" }}>
+                      {/* Visual funnel */}
+                      <div style={{ display: "flex", alignItems: "center", gap: 4, marginBottom: 8 }}>
+                        {[
+                          { label: "Audience", icon: "👥", w: "100%" },
+                          { label: "Visitors", icon: "👁️", w: "70%" },
+                          { label: "Buyers", icon: "💰", w: "40%" },
+                        ].map((step, i) => (
+                          <React.Fragment key={i}>
+                            {i > 0 && <div style={{ fontSize: 10, color: c.muted }}>→</div>}
+                            <div style={{ flex: 1, textAlign: "center" }}>
+                              <div style={{ fontSize: 14, marginBottom: 2 }}>{step.icon}</div>
+                              <div style={{ height: 16, borderRadius: 4, background: `linear-gradient(135deg, ${c.purple}${i === 0 ? "20" : i === 1 ? "35" : "60"}, ${c.blue}${i === 0 ? "20" : i === 1 ? "35" : "60"})`, marginBottom: 2 }} />
+                              <div style={{ fontSize: 8, fontWeight: 700, color: c.muted }}>{step.label}</div>
+                            </div>
+                          </React.Fragment>
+                        ))}
+                      </div>
+                      <div style={{ fontSize: 10, color: c.sub, lineHeight: 1.5, marginBottom: 8 }}>Grow an audience → send them to your store → convert them into buyers. I can help with each step.</div>
+                      <div style={{ display: "flex", gap: 4 }}>
+                        <button onClick={() => { setAiMessages([{ role: "user", content: "How do I get traffic?" }, { role: "ai", type: "traffic-explainer" }]); }} style={{ flex: 1, padding: "6px", borderRadius: 6, border: `1px solid ${c.purpleBorder}`, background: c.purpleLight, color: c.purple, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>How do I get traffic?</button>
+                        <button onClick={() => { setAiMessages([{ role: "user", content: "Write me a social post" }, { role: "ai", type: "social-post" }]); }} style={{ flex: 1, padding: "6px", borderRadius: 6, border: `1px solid ${c.blueBorder}`, background: c.blueLight, color: c.blue, fontSize: 10, fontWeight: 600, cursor: "pointer" }}>Write me a post</button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Quick actions */}
+                  <div style={{ fontSize: 9, fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: c.muted, marginBottom: 6 }}>TRY ASKING</div>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
+                    {[
+                      "How do I get my first sale?",
+                      "Write me a launch email",
+                      "How should I price my product?",
+                      "Create a lead magnet",
+                      "Generate social posts for Instagram",
+                    ].map((q, i) => (
+                      <button key={i} onClick={() => { setAiMessages([{ role: "user", content: q }]); setAiTyping(true); setTimeout(() => { const r = aiRespond(q); setAiMessages(prev => [...prev, { role: "ai", ...r }]); setAiTyping(false); }, 1000); }} style={{
+                        padding: "7px 10px", borderRadius: 8, border: `1px solid ${c.border}`,
+                        background: "#fff", fontSize: 11, fontWeight: 500, color: c.text,
+                        cursor: "pointer", textAlign: "left", transition: "border-color 0.15s",
+                      }}
+                      onMouseEnter={e => e.currentTarget.style.borderColor = c.purpleBorder}
+                      onMouseLeave={e => e.currentTarget.style.borderColor = c.border}>
+                        {q}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Conversation messages */}
+              {aiMessages.map((msg, i) => <AiMessageBubble key={i} msg={msg} />)}
+
+              {/* Typing indicator */}
+              {aiTyping && (
+                <div style={{ display: "flex", alignItems: "center", gap: 5, marginBottom: 8 }}>
+                  <div style={{ width: 18, height: 18, borderRadius: 5, background: `linear-gradient(135deg, ${c.purple}, ${c.blue})`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 8 }}>✦</div>
+                  <div style={{ display: "flex", gap: 3 }}>
+                    {[0,1,2].map(i => <div key={i} style={{ width: 5, height: 5, borderRadius: "50%", background: c.muted, animation: `pulse 1s ease-in-out ${i * 0.2}s infinite` }} />)}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
       </div>
-      {/* Global AI Command Bar — sticky bottom */}
-      <div style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 20, background: `linear-gradient(transparent, ${c.bg} 20%)`, padding: "20px 28px 16px" }}>
+
+      {/* Global AI Command Bar — sticky bottom, wired to AI panel */}
+      <div style={{ position: "fixed", bottom: 0, left: 0, right: 341, zIndex: 20, background: `linear-gradient(transparent, ${c.bg} 20%)`, padding: "12px 28px 12px" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
           <div style={{ background: c.card, borderRadius: 14, border: `1px solid ${c.purpleBorder}`, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 -4px 24px rgba(0,0,0,0.08), 0 0 0 1px rgba(117,52,237,0.1)" }}>
             <div style={{ width: 30, height: 30, borderRadius: 8, background: `linear-gradient(135deg, ${c.purple}, ${c.blue})`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 15, flexShrink: 0 }}>✦</div>
-            <input placeholder={dashMode === "launch" ? "Try: 'Help me write my first social post', 'Add a testimonial section', 'Create a lead magnet'..." : "Ask anything — 'Increase my revenue', 'Write an email campaign', 'Why are Masterclass sales down?'..."} style={{ flex: 1, border: "none", background: "transparent", padding: "6px 4px", fontSize: 13, outline: "none", color: c.text }} />
+            <input value={aiInput} onChange={e => setAiInput(e.target.value)} onKeyDown={e => e.key === "Enter" && sendAi()}
+              placeholder={dashMode === "launch" ? "Try: 'Help me write my first social post', 'Create a lead magnet'..." : "Ask anything — 'How does my funnel convert?', 'Write an email campaign'..."}
+              style={{ flex: 1, border: "none", background: "transparent", padding: "6px 4px", fontSize: 13, outline: "none", color: c.text }} />
             <div style={{ display: "flex", gap: 4, flexShrink: 0 }}>
               <span style={{ fontSize: 10, color: c.muted, padding: "4px 8px", background: c.bg, borderRadius: 4, cursor: "pointer" }}>Products</span>
               <span style={{ fontSize: 10, color: c.muted, padding: "4px 8px", background: c.bg, borderRadius: 4, cursor: "pointer" }}>Pages</span>
               <span style={{ fontSize: 10, color: c.muted, padding: "4px 8px", background: c.bg, borderRadius: 4, cursor: "pointer" }}>Email</span>
               <span style={{ fontSize: 10, color: c.muted, padding: "4px 8px", background: c.bg, borderRadius: 4, cursor: "pointer" }}>Sales</span>
             </div>
-            <button style={{ background: `linear-gradient(135deg, ${c.purple}, ${c.purple}dd)`, color: "#fff", border: "none", borderRadius: 8, padding: "7px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
+            <button onClick={sendAi} style={{ background: `linear-gradient(135deg, ${c.purple}, ${c.purple}dd)`, color: "#fff", border: "none", borderRadius: 8, padding: "7px 16px", fontSize: 13, fontWeight: 600, cursor: "pointer", display: "flex", alignItems: "center", gap: 4 }}>
               <span style={{ fontSize: 12 }}>✦</span> Ask AI
             </button>
           </div>
-          <div style={{ textAlign: "center", fontSize: 10, color: c.muted, marginTop: 4 }}>AI can access your products, pages, campaigns, orders, and analytics to help you grow.</div>
         </div>
       </div>
     </div>
@@ -1679,7 +2461,7 @@ const oc = {
   rose: "#DC2452", roseLight: "#FFF0F3", roseBorder: "#FDBED0",
 };
 
-const Onboarding = ({ onComplete }) => {
+const Onboarding = ({ onComplete, onSkip }) => {
   const [step, setStep] = useState("idea"); // idea, shape, generating, ready
   const [idea, setIdea] = useState("");
   const [expanded, setExpanded] = useState(false);
@@ -1931,6 +2713,10 @@ const Onboarding = ({ onComplete }) => {
                 )}
               </div>
             )}
+          </div>
+          {/* Skip to dashboard */}
+          <div style={{ textAlign: "center", marginTop: 20 }}>
+            <button onClick={onSkip} style={{ background: "none", border: "none", fontSize: 12, color: oc.muted, cursor: "pointer", textDecoration: "underline", padding: "4px 8px" }}>Skip to dashboard →</button>
           </div>
         </div>
       </div>
@@ -2304,10 +3090,11 @@ const Root = () => {
     setIsNew(true);
     setMode("onboarding");
   };
+  const skipToDashboard = () => { setIsNew(false); setMode("dashboard"); };
   return (
     <div>
       <div style={{ display: mode === "onboarding" ? "block" : "none" }}>
-        <Onboarding key={onboardingKey} onComplete={() => { setIsNew(true); setMode("dashboard"); }} />
+        <Onboarding key={onboardingKey} onComplete={() => { setIsNew(true); setMode("dashboard"); }} onSkip={skipToDashboard} />
       </div>
       <div style={{ display: mode === "dashboard" ? "block" : "none" }}>
         <Dashboard onNewBusiness={startNewBusiness} isNew={isNew} />
