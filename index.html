@@ -2412,8 +2412,8 @@ const Dashboard = ({ onNewBusiness, isNew }) => {
       </div>
 
       {/* Global AI Command Bar — sticky bottom, wired to AI panel */}
-      <div style={{ position: "fixed", bottom: 0, left: 0, right: 341, zIndex: 20, background: `linear-gradient(transparent, ${c.bg} 20%)`, padding: "12px 28px 12px" }}>
-        <div style={{ maxWidth: 1100, margin: "0 auto" }}>
+      <div style={{ position: "fixed", bottom: 0, left: 0, right: 340, zIndex: 20, background: `linear-gradient(transparent, ${c.bg} 20%)`, padding: "12px 28px 12px" }}>
+        <div style={{ maxWidth: 900, margin: "0 auto" }}>
           <div style={{ background: c.card, borderRadius: 14, border: `1px solid ${c.purpleBorder}`, padding: "10px 14px", display: "flex", alignItems: "center", gap: 10, boxShadow: "0 -4px 24px rgba(0,0,0,0.08), 0 0 0 1px rgba(117,52,237,0.1)" }}>
             <div style={{ width: 30, height: 30, borderRadius: 8, background: `linear-gradient(135deg, ${c.purple}, ${c.blue})`, display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", fontSize: 15, flexShrink: 0 }}>✦</div>
             <input value={aiInput} onChange={e => setAiInput(e.target.value)} onKeyDown={e => e.key === "Enter" && sendAi()}
